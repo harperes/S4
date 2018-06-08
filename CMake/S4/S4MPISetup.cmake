@@ -2,6 +2,8 @@
 
 ##################################
 ## Find MPI
+# INCLUDE_DIRECTORIES(/opt/local/include/mpich-mp)
+# LINK_DIRECTORIES(/opt/local/lib/mpich-mp)
 if (ENABLE_MPI)
     # the package is needed
     find_package(MPI REQUIRED)
@@ -37,5 +39,10 @@ if (ENABLE_MPI)
         # add include directories
         include_directories(${MPI_C_INCLUDE_PATH})
     endif()
-
 endif (ENABLE_MPI)
+
+# set(MPI_INC /opt/local/include/mpich-mp)
+# set(MPI_LIB /opt/local/lib/mpich-mp "-lstdc++ -lmpi_cxx")
+# include_directories(${MPI_INC})
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_MPI ${MPI_INC}")
+

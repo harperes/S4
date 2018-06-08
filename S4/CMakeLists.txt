@@ -146,9 +146,9 @@ set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_
 # add_library(S4 MODULE ${SOURCES} ${CYTHON_SOURCES})
 # add_library(S4 STATIC ${SOURCES})
 add_library(S4 OBJECT ${SOURCES})
-# target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW_LIBRARIES} ${MPI_LIBRARY})
+# target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 add_executable(luaS4 $<TARGET_OBJECTS:S4> main_lua.c)
-target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW_LIBRARIES} ${MPI_LIBRARY})
+target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 # set_target_properties(luaS4 PROPERTIES LINK_FLAGS "-static")
 # target_link_libraries(luaS4 S4)
 # setup_pymodule(S4)
@@ -156,7 +156,7 @@ target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW_LIBRAR
 # Make Lua Frontend
 # set_source_files_properties(main_lua.c PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_ARRAY)
 # add_executable(luaS4 main_lua.c)
-# target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW_LIBRARIES} ${MPI_LIBRARY})
+# target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 
 # INSTALL(TARGETS _freud
   # LIBRARY DESTINATION freud
