@@ -11,6 +11,27 @@
 #   SHLIB_FLAGS
 
 CPPFLAGS += -IS4 -IS4/RNP -IS4/kiss_fft
+ifdef BLAS_LIB
+CPPFLAGS += -DHAVE_BLAS
+endif
+
+ifdef LAPACK_LIB
+CPPFLAGS += -DHAVE_LAPACK
+endif
+
+ifdef FFTW3_LIB
+CPPFLAGS += -DHAVE_LIBFFTW3 $(FFTW3_INC)
+endif
+
+ifdef MPI_LIB
+CPPFLAGS += -DHAVE_MPI $(MPI_INC)
+endif
+
+ifdef PTHREAD_LIB
+CPPFLAGS += -DHAVE_LIBPTHREAD $(PTHREAD_INC)
+endif
+
+LIBS = $(BLAS_LIB) $(LAPACK_LIB) $(FFTW3_LIB) $(MPI_LIB)
 
 #### Compilation targets
 
@@ -110,12 +131,12 @@ $(OBJDIR)/S4k/Eigensystems.o: S4/RNP/Eigensystems.cpp
 $(OBJDIR)/S4k/main_lua.o: S4/main_lua.c objdir
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $(LUA_INC) $< -o $@
 $(OBJDIR)/S4: $(OBJDIR)/S4k/main_lua.o $(OBJDIR)/$(S4_LIBNAME)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@ -L$(OBJDIR) -lS4 $(LA_LIBS) $(LUA_LIB)
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@ -L$(OBJDIR) -lS4 $(LA_LIBS) $(LUA_LIB) $(FFTW3_LIB)
 
 $(OBJDIR)/S4k/main_lua_mpi.o: S4/main_lua.c objdir
 	$(CC) -c -DHAVE_MPI $(CFLAGS) $(CPPFLAGS) $(LUA_INC) $(MPI_INC) $< -o $@
 $(OBJDIR)/S4mpi: $(OBJDIR)/S4k/main_lua_mpi.o $(OBJDIR)/$(S4_LIBNAME)
-	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@ -L$(OBJDIR) -lS4 $(LA_LIBS) $(LUA_LIB) $(MPI_LIB)
+	$(CXX) $(CFLAGS) $(CPPFLAGS) $< -o $@ -L$(OBJDIR) -lS4 $(LA_LIBS) $(LUA_LIB) $(FFTW3_LIB) $(MPI_LIB)
 
 
 
@@ -131,7 +152,7 @@ $(OBJDIR)/FunctionSampler1D.$(SHLIB_EXT): modules/function_sampler_1d.c modules/
 	$(CC) $(OPTFLAGS) $(SHLIB_FLAGS) -fpic -Wall $(LUA_INC) -o $@ $(OBJDIR)/modules/function_sampler_1d.o modules/lua_function_sampler_1d.c $(LUA_MODULE_LIB)
 $(OBJDIR)/FunctionSampler2D.$(SHLIB_EXT): modules/function_sampler_2d.c modules/function_sampler_2d.h modules/lua_function_sampler_2d.c
 	$(CC) -c $(OPTFLAGS) -fpic -Wall -I. modules/function_sampler_2d.c -o $(OBJDIR)/modules/function_sampler_2d.o
-	$(CC) -c -O2 -fpic -Wall -I. modules/predicates.c -o $(OBJDIR)/modules/mod_predicates.o
+	$(CC) -c -O3 -fpic -Wall -I. modules/predicates.c -o $(OBJDIR)/modules/mod_predicates.o
 	$(CC) $(OPTFLAGS) $(SHLIB_FLAGS) -fpic -Wall $(LUA_INC) -o $@ $(OBJDIR)/modules/function_sampler_2d.o $(OBJDIR)/modules/mod_predicates.o modules/lua_function_sampler_2d.c $(LUA_MODULE_LIB)
 
 #### Python extension
