@@ -33,6 +33,7 @@ else(ENABLE_CYTHON)
   set(CYTHON_SOURCES ${PYX_CPPS})
 endif(ENABLE_CYTHON)
 
+# ${CMAKE_CURRENT_SOURCE_DIR} refers to cpp
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_SOURCE_DIR}/RNP
                     ${CMAKE_CURRENT_SOURCE_DIR}/ffm
@@ -41,101 +42,31 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}
                     ${CMAKE_CURRENT_BINARY_DIR}
                     )
 
-# set(S4_SOURCES
-            # Interpolator.c
-            # Interpolator.h
-            # Patterning.cpp
-            # Patterning.hpp
-            # S4.h
-            # S4_internal.h
-            # SpecialFunction.hpp
-            # SpectrumSampler.c
-            # SpectrumSampler.h
-            # config.h
-            # convert.c
-            # convert.h
-            # cubature.c
-            # cubature.h
-            # debug.h
-            # # ext_lua.c
-            # # ext_lua.h
-            # gsel.c
-            # gsel.h
-            # # main_lua.c
-            # # main_python.c
-            # numalloc.c
-            # numalloc.h
-            # rcwa.cpp
-            # rcwa.h
-            # sort.c
-            # sort.h
-            # RNP/Eigensystems.cpp
-            # RNP/Eigensystems.h
-            # RNP/Eigensystems_essl.h
-            # RNP/Eigensystems_lapack.h
-            # RNP/IO.h
-            # RNP/LinearSolve.h
-            # RNP/LinearSolve_lapack.h
-            # RNP/TBLAS.h
-            # RNP/TBLAS_acml.h
-            # RNP/TBLAS_ext.h
-            # RNP/TLASupport.h
-            # RNP/powidf2.c
-            # fmm/fft_iface.cpp
-            # fmm/fft_iface.h
-            # fmm/fmm.h
-            # fmm/fmm_FFT.cpp
-            # fmm/fmm_PolBasisJones.cpp
-            # fmm/fmm_PolBasisNV.cpp
-            # fmm/fmm_PolBasisVL.cpp
-            # fmm/fmm_closed.cpp
-            # fmm/fmm_common.cpp
-            # fmm/fmm_experimental.cpp
-            # fmm/fmm_kottke.cpp
-            # kiss_fft/_kiss_fft_guts.h
-            # kiss_fft/kiss_fft.c
-            # kiss_fft/kiss_fft.h
-            # kiss_fft/tools/fftutil.c
-            # kiss_fft/tools/kfc.c
-            # kiss_fft/tools/kfc.h
-            # kiss_fft/tools/kiss_fftnd.c
-            # kiss_fft/tools/kiss_fftnd.h
-            # kiss_fft/tools/kiss_fftndr.c
-            # kiss_fft/tools/kiss_fftndr.h
-            # kiss_fft/tools/kiss_fftr.c
-            # kiss_fft/tools/kiss_fftr.h
-            # kiss_fft/tools/psdpng.c
-            # pattern/intersection.c
-            # pattern/intersection.h
-            # pattern/pattern.c
-            # pattern/pattern.h
-            # pattern/predicates.c
-            #)
 set(S4_SOURCES
-            S4.cpp
-            rcwa.cpp
-            fmm/fmm_common.cpp
-            fmm/fmm_FFT.cpp
-            fmm/fmm_kottke.cpp
-            fmm/fmm_closed.cpp
-            fmm/fmm_PolBasisNV.cpp
-            fmm/fmm_PolBasisVL.cpp
-            fmm/fmm_PolBasisJones.cpp
-            fmm/fmm_experimental.cpp
-            fmm/fft_iface.cpp
-            pattern/pattern.c
-            pattern/intersection.c
-            pattern/predicates.c
-            numalloc.c
-            gsel.c
-            sort.c
-            kiss_fft/kiss_fft.c
-            kiss_fft/tools/kiss_fftnd.c
-            SpectrumSampler.c
-            cubature.c
-            Interpolator.c
-            convert.c
-            RNP/Eigensystems.cpp
+    S4.cpp
+    rcwa.cpp
+    fmm/fmm_common.cpp
+    fmm/fmm_FFT.cpp
+    fmm/fmm_kottke.cpp
+    fmm/fmm_closed.cpp
+    fmm/fmm_PolBasisNV.cpp
+    fmm/fmm_PolBasisVL.cpp
+    fmm/fmm_PolBasisJones.cpp
+    fmm/fmm_experimental.cpp
+    fmm/fft_iface.cpp
+    pattern/pattern.c
+    pattern/intersection.c
+    pattern/predicates.c
+    numalloc.c
+    gsel.c
+    sort.c
+    kiss_fft/kiss_fft.c
+    kiss_fft/tools/kiss_fftnd.c
+    SpectrumSampler.c
+    cubature.c
+    Interpolator.c
+    convert.c
+    RNP/Eigensystems.cpp
             )
 
 foreach(src IN LISTS S4_SOURCES)
@@ -148,7 +79,15 @@ set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_
 add_library(S4 OBJECT ${SOURCES})
 # target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 add_executable(luaS4 $<TARGET_OBJECTS:S4> main_lua.c)
-target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
+target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
+
+# these may work; unsure
+# add_library(_S4 MODULE ${SOURCES} main_python.c)
+# target_link_libraries(_S4 ${PYTHON_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
+# set_target_properties(_S4 PROPERTIES PREFIX "")
+# set_target_properties(_S4 PROPERTIES SUFFIX ".so")
+# fix_conda_python(_S4)
+
 # set_target_properties(luaS4 PROPERTIES LINK_FLAGS "-static")
 # target_link_libraries(luaS4 S4)
 # setup_pymodule(S4)

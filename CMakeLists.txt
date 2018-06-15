@@ -37,7 +37,6 @@ include(FindFFTW)
 include_directories(${FFTW3_INC})
 include(FindAccelerators)
 include_directories(${vecLib_INCLUDES})
-include(S4MPISetup)
 
 # set(BLAS_LIBRARIES "-framework Accelerate")
 # mark_as_advanced(BLAS_LIBRARIES)
@@ -68,6 +67,10 @@ include_directories(${NUMPY_INCLUDE_DIR})
 
 # macros
 include (S4Macros)
+# mpi
+include(S4MPISetup)
+include_directories(${MPI_CXX_INCLUDE_DIRS})
+link_directories(${MPI_CXX_LIBRARIES})
 
 # include external source projects
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern)

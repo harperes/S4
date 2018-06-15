@@ -1,10 +1,6 @@
 # - Find FFTW
 # Find installed FFTW libraries
 
-# if (FFTW3_INC)
-   # set(FFTW3_FIND_QUIETLY TRUE)
-# endif (FFTW3_INC)
-
 find_path(FFTW3_INC fftw3.h)
 find_library(FFTW3_LIB NAMES fftw3)
 

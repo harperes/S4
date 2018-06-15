@@ -18,7 +18,7 @@ find_package_handle_standard_args(vecLib DEFAULT_MSG vecLib_INCLUDES)
 
 if(vecLIB_FOUND)
   if(vecLib_INCLUDES MATCHES "^/System/Library/Frameworks/vecLib.framework.*")
-  
+
     set(vecLib_LINKER_LIBS -lcblas "-framework vecLib")
     message(STATUS "Found standalone vecLib.framework")
   else()
