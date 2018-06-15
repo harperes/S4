@@ -76,10 +76,10 @@ endforeach(src IN LISTS S4_SOURCES)
 set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_ARRAY)
 # add_library(S4 MODULE ${SOURCES} ${CYTHON_SOURCES})
 # add_library(S4 STATIC ${SOURCES})
-add_library(S4 OBJECT ${SOURCES})
+add_library(libS4 OBJECT ${SOURCES})
 # target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
-add_executable(luaS4 $<TARGET_OBJECTS:S4> main_lua.c)
-target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
+add_executable(S4 $<TARGET_OBJECTS:libS4> main_lua.c)
+target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 
 # these may work; unsure
 # add_library(_S4 MODULE ${SOURCES} main_python.c)

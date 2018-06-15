@@ -103,6 +103,6 @@ ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 #add_subdirectory(freud)
 # include(freud/CMakeLists.txt)
-add_subdirectory(S4)
-# add_subdirectory(cpp)
+# add_subdirectory(S4)
+add_subdirectory(cpp)
 # add_subdirectory(doc)
