@@ -16,18 +16,47 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <pybind11/pybind11.h>
 
 #ifndef _SPECTRUM_SAMPLER_H_
 #define _SPECTRUM_SAMPLER_H_
 
-typedef struct SpectrumSampler_* SpectrumSampler;
-typedef struct{
-	int initial_num_points;
-	double range_threshold;
-	double max_bend;
-	double min_dx;
-	int parallelize;
-} SpectrumSampler_Options;
+// SpectrumSampler_Options is defined with an alias type
+typedef struct SpectrumSampler_Options_{
+    int initial_num_points;
+    double range_threshold;
+    double max_bend;
+    double min_dx;
+    int parallelize;
+    } SpectrumSampler_Options;
+
+// data_point is defined with an alias type
+typedef struct data_point_{
+    double x, y;
+    struct data_point_ *prev, *next;
+    } data_point;
+
+
+// SpectrumSampler_ is the alias...?
+typedef struct SpectrumSampler_{
+    data_point *value;
+    union{
+        data_point *active;
+        struct{
+            data_point **active;
+            int n_active;
+            int n_alloc;
+            double *buf;
+            } active_list;
+        } active_set;
+    int done;
+    int state;
+    double x0, x1;
+    double y_max, y_min;
+    SpectrumSampler_Options options;
+    } *SpectrumSampler;
+// this defines SpectrumSampler as a pointer to SpectrumSampler_ (the alias...??)
+/* typedef struct SpectrumSampler_* SpectrumSampler; */
 
 SpectrumSampler SpectrumSampler_New(double x0, double x1, const SpectrumSampler_Options *options);
 void SpectrumSampler_Destroy(SpectrumSampler sampler);

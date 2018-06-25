@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <pybind11/pybind11.h>
 
 #include "config.h"
 
@@ -3713,3 +3714,9 @@ int S4_Simulation_GetFieldPlane(S4_Simulation *S, const int nxy[2], const S4_rea
 	S4_TRACE("< S4_Simulation_GetFieldPlane\n");
 	return 0;
 }
+
+float new_function()
+    {
+    float y = 3.14;
+    return y;
+    }

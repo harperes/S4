@@ -35,4 +35,6 @@
 // Returns
 //   -n if the n-th argument is invalid
 //   0 on success
+#include <pybind11/pybind11.h>
+
 int G_select(const int method, unsigned int *NG, const double Lk[4], int *G);

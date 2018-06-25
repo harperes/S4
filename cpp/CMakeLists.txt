@@ -12,10 +12,10 @@ fix_conda_python(${target})
 endmacro(setup_pymodule)
 #####################
 
-# file(GLOB_RECURSE PXIS ${CMAKE_CURRENT_SOURCE_DIR}/../freud/*.pxi)
-# file(GLOB_RECURSE PYXS ${CMAKE_CURRENT_SOURCE_DIR}/../freud/*.pyx)
+file(GLOB_RECURSE PXIS ${CMAKE_CURRENT_SOURCE_DIR}/../S4/*.pxi)
+file(GLOB_RECURSE PYXS ${CMAKE_CURRENT_SOURCE_DIR}/../S4/*.pyx)
 
-# set(PYX_CPPS ${CMAKE_CURRENT_SOURCE_DIR}/../freud/_freud.cpp)
+set(PYX_CPPS ${CMAKE_CURRENT_SOURCE_DIR}/../S4/_testS4.cpp)
 
 set(ENABLE_CYTHON OFF CACHE BOOL "Regenerate cython sources")
 if(ENABLE_CYTHON)
@@ -24,7 +24,7 @@ if(ENABLE_CYTHON)
     string(REPLACE ".pyx" ".cpp" cpp_rel "${pyx_rel}")
     set(cpp_out "${CMAKE_CURRENT_SOURCE_DIR}/${cpp_rel}")
     add_custom_command(OUTPUT ${cpp_out}
-                       COMMAND ${CYTHON_EXECUTABLE} -X boundscheck=False -o ${cpp_out} -w ${CMAKE_CURRENT_SOURCE_DIR}/../freud --cplus ${pyx}
+                       COMMAND ${CYTHON_EXECUTABLE} -X boundscheck=False -o ${cpp_out} -w ${CMAKE_CURRENT_SOURCE_DIR}/../S4 --cplus ${pyx}
                        DEPENDS ${pyx} ${PXIS})
     set_source_files_properties(${cpp_out} PROPERTIES GENERATED TRUE)
     list(APPEND CYTHON_SOURCES ${cpp_out})
@@ -54,18 +54,18 @@ set(S4_SOURCES
     fmm/fmm_PolBasisJones.cpp
     fmm/fmm_experimental.cpp
     fmm/fft_iface.cpp
-    pattern/pattern.c
-    pattern/intersection.c
-    pattern/predicates.c
-    numalloc.c
-    gsel.c
-    sort.c
-    kiss_fft/kiss_fft.c
-    kiss_fft/tools/kiss_fftnd.c
-    SpectrumSampler.c
-    cubature.c
-    Interpolator.c
-    convert.c
+    pattern/pattern.cpp
+    pattern/intersection.cpp
+    pattern/predicates.cpp
+    numalloc.cpp
+    gsel.cpp
+    sort.cpp
+    kiss_fft/kiss_fft.cpp
+    kiss_fft/tools/kiss_fftnd.cpp
+    SpectrumSampler.cpp
+    cubature.cpp
+    Interpolator.cpp
+    convert.cpp
     RNP/Eigensystems.cpp
             )
 
@@ -74,19 +74,29 @@ foreach(src IN LISTS S4_SOURCES)
 endforeach(src IN LISTS S4_SOURCES)
 
 set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_ARRAY)
-# add_library(S4 MODULE ${SOURCES} ${CYTHON_SOURCES})
-# add_library(S4 STATIC ${SOURCES})
-add_library(libS4 OBJECT ${SOURCES})
-# target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
-add_executable(S4 $<TARGET_OBJECTS:libS4> main_lua.c)
-target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
+
+# add_library(libS4 OBJECT ${SOURCES})
+# add_executable(luaS4 $<TARGET_OBJECTS:libS4> main_lua.c)
+# target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 
 # these may work; unsure
-# add_library(_S4 MODULE ${SOURCES} main_python.c)
+# add_library(_S4 MODULE ${SOURCES} ${CYTHON_SOURCES})
 # target_link_libraries(_S4 ${PYTHON_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 # set_target_properties(_S4 PROPERTIES PREFIX "")
 # set_target_properties(_S4 PROPERTIES SUFFIX ".so")
 # fix_conda_python(_S4)
+
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${SOURCES})
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/S4.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Interpolator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cubature.cpp ${CMAKE_CURRENT_SOURCE_DIR}/SpectrumSampler.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Interpolator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cubature.cpp ${CMAKE_CURRENT_SOURCE_DIR}/SpectrumSampler.cpp ${CMAKE_CURRENT_SOURCE_DIR}/fmm/fft_iface.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Interpolator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cubature.cpp ${CMAKE_CURRENT_SOURCE_DIR}/SpectrumSampler.cpp ${CMAKE_CURRENT_SOURCE_DIR}/rcwa.cpp ${CMAKE_CURRENT_SOURCE_DIR}/fmm/fft_iface.cpp)
+pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Interpolator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cubature.cpp ${CMAKE_CURRENT_SOURCE_DIR}/SpectrumSampler.cpp ${CMAKE_CURRENT_SOURCE_DIR}/kiss_fft/kiss_fft.cpp ${CMAKE_CURRENT_SOURCE_DIR}/kiss_fft/tools/kiss_fftnd.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/Interpolator.cpp ${CMAKE_CURRENT_SOURCE_DIR}/cubature.cpp ${CMAKE_CURRENT_SOURCE_DIR}/SpectrumSampler.cpp ${CMAKE_CURRENT_SOURCE_DIR}/kiss_fft/kiss_fft.cpp ${CMAKE_CURRENT_SOURCE_DIR}/kiss_fft/tools/kiss_fftnd.cpp ${CMAKE_CURRENT_SOURCE_DIR}/fmm/fft_iface.cpp ${CMAKE_CURRENT_SOURCE_DIR}/fmm/fmm_FFT.cpp)
+
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/convert.cpp)
+# pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp ${CMAKE_CURRENT_SOURCE_DIR}/test_func.cpp)
 
 # set_target_properties(luaS4 PROPERTIES LINK_FLAGS "-static")
 # target_link_libraries(luaS4 S4)
@@ -97,6 +107,6 @@ target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 # add_executable(luaS4 main_lua.c)
 # target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 
-# INSTALL(TARGETS _freud
-  # LIBRARY DESTINATION freud
-  # )
+INSTALL(TARGETS S4
+  LIBRARY DESTINATION S4
+  )

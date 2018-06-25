@@ -16,6 +16,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
+#include <pybind11/pybind11.h>
 
 #ifndef S4_H_INCLUDED
 #define S4_H_INCLUDED
@@ -286,6 +287,8 @@ int S4_Simulation_GetSMatrixDeterminant(
 	S4_real *rmant, S4_real *base, int *expo
 );
 
+// let's try a new function
+float new_function();
 
 #ifdef __cplusplus
 } /* extern "C" */

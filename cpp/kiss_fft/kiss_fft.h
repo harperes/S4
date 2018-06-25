@@ -1,6 +1,7 @@
 #ifndef KISS_FFT_H
 #define KISS_FFT_H
 
+#include <pybind11/pybind11.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <math.h>
