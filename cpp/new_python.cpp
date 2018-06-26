@@ -40,10 +40,6 @@ PYBIND11_MODULE(S4, m)
     m.doc() = "S4 Lorem Ipsum";
     py::class_<S4_Simulation>(m, "S4_Simulation");
     py::class_<Interpolator>(m, "Interpolator");
-    py::class_<SpectrumSampler>(m, "SpectrumSampler");
-    py::class_<S4Interpolator_Data>(m, "S4Interpolator_Data");
-    py::class_<S4Excitation_Data>(m, "S4Excitation_Data");
-    py::class_<S4SpectrumSampler_Data>(m, "S4SpectrumSampler_Data");
 
     // py::class_<data_point>(m, "data_point")
         // .def_readwrite("x", &data_point::x)
