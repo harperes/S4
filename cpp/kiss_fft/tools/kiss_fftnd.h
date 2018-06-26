@@ -1,5 +1,3 @@
-#include <pybind11/pybind11.h>
-
 #ifndef KISS_FFTND_H
 #define KISS_FFTND_H
 
@@ -9,15 +7,8 @@
 extern "C" {
 #endif
 
-typedef struct kiss_fftnd_state
-    {
-    int dimprod; /* dimsum would be mighty tasty right now */
-    int ndims;
-    int *dims;
-    kiss_fft_cfg *states; /* cfg states for each dimension */
-    kiss_fft_cpx * tmpbuf; /*buffer capable of hold the entire input */
-    } * kiss_fftnd_cfg;
-
+typedef struct kiss_fftnd_state * kiss_fftnd_cfg;
+    
 kiss_fftnd_cfg  kiss_fftnd_alloc(const int *dims,int ndims,int inverse_fft,void*mem,size_t*lenmem);
 void kiss_fftnd(kiss_fftnd_cfg  cfg,const kiss_fft_cpx *fin,kiss_fft_cpx *fout);
 

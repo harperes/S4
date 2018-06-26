@@ -16,24 +16,16 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA
  */
-#include <pybind11/pybind11.h>
 
 #ifndef _INTERPOLATOR_H_
 #define _INTERPOLATOR_H_
 
+typedef struct Interpolator_* Interpolator;
 typedef enum Interpolator_type_{
 	Interpolator_LINEAR,
 	Interpolator_CUBIC_SPLINE,
 	Interpolator_CUBIC_HERMITE_SPLINE
 } Interpolator_type;
-
-typedef struct Interpolator_{
-    double *xy;
-    int ny;
-    int n;
-    Interpolator_type type;
-    double *result;
-    } * Interpolator;
 
 Interpolator Interpolator_New(int n, int ny, double *xy, Interpolator_type type);
 void Interpolator_Destroy(Interpolator I);

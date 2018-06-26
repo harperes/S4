@@ -18,7 +18,6 @@
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA
    02111-1307 USA.  */
 
-#include <pybind11/pybind11.h>
 #include <stddef.h>
 void
 sort (void *const pbase, size_t total_elems, size_t size,
