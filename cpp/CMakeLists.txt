@@ -78,8 +78,8 @@ set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_
 # add_library(S4 STATIC ${SOURCES})
 add_library(libS4 OBJECT ${SOURCES})
 # target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
-add_executable(S4 $<TARGET_OBJECTS:libS4> main_lua.c)
-target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
+add_executable(luaS4 $<TARGET_OBJECTS:libS4> main_lua.c)
+target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 
 # these may work; unsure
 # add_library(_S4 MODULE ${SOURCES} main_python.c)
@@ -87,6 +87,12 @@ target_link_libraries(S4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 # set_target_properties(_S4 PROPERTIES PREFIX "")
 # set_target_properties(_S4 PROPERTIES SUFFIX ".so")
 # fix_conda_python(_S4)
+
+# this is already done
+add_library(testS4 SHARED ${SOURCES})
+target_link_libraries(testS4 ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
+pybind11_add_module(S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp)
+target_link_libraries(S4 PRIVATE testS4 ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 
 # set_target_properties(luaS4 PROPERTIES LINK_FLAGS "-static")
 # target_link_libraries(luaS4 S4)

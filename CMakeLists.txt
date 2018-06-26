@@ -55,8 +55,9 @@ include_directories(${PYTHON_INCLUDE_DIR})
 
 # setup cython
 # include(S4CythonSetup)
-find_package(Cython)
-include(UseCython)
+# find_package(Cython)
+# include(UseCython)
+find_package(pybind11)
 
 # setup numpy
 include (S4NumpySetup)
