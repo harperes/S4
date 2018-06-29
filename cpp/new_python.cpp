@@ -2,6 +2,8 @@
 
 namespace py = pybind11;
 
+#include "new_python.h"
+
 #ifdef HAVE_MPI
 #include <mpi.h>
 #endif
@@ -35,10 +37,38 @@ namespace py = pybind11;
 #define Bool unsigned char
 #endif
 
+PySimulation::PySimulation()
+    {
+    Lr = new double[4];
+    Lr[0] = 1;
+    Lr[1] = 0;
+    Lr[2] = 0;
+    Lr[3] = 1;
+    nG = 1;
+    }
+
+PySimulation::~PySimulation()
+    {
+    delete[] Lr;
+    }
+
+void PySimulation::CreateNew()
+    {
+    S = S4_Simulation_New(Lr, nG, NULL);
+    }
+
+// I should probably do this as a class, something like
+
 PYBIND11_MODULE(S4, m)
     {
     m.doc() = "S4 Lorem Ipsum";
-    py::class_<S4_Simulation>(m, "S4_Simulation");
+    py::class_<PySimulation>(m, "S4_Simulation")
+        .def(py::init<>())
+        .def("CreateNew", &PySimulation::CreateNew)
+        // .def("Clone", &S4_Simulation_Clone)
+        // .def("New", &S4_Simulation_New)
+        // .def("AddMaterial", &S4)
+        ;
     py::class_<Interpolator>(m, "Interpolator");
 
     // py::class_<data_point>(m, "data_point")
