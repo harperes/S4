@@ -37,6 +37,23 @@ class PySimulation
     ~PySimulation();
     // I dont' know what I should call this...
     void CreateNew();
+    struct EPSData
+        {
+        S4_real eps[18];
+        int type;
+        };
+    // these need the proper arguments included
+    /* void AddMaterial(); */
+    EPSData SetEPS(py::array_t<double> pyEPS);
+    void AddMaterial(std::string pyName, py::array_t<double> pyEPS);
+    void SetMaterial(std::string pyName, py::array_t<double> pyEPS);
+    void SetLattice(py::array_t<double> pyLattice);
+    void SetNumG(int n);
+    int GetNumG();
+    void AddLayer(std::string pyName, double pyThickness, std::string pyBackground);
+    void SetLayer(std::string pyName, double pyThickness, std::string pyBackground);
+    void SetLayerThickness(std::string pyName, double pyThickness);
+    void SetLayerPatternCircle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyRadius);
 
     private:
     S4_Simulation* S;
