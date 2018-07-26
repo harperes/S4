@@ -437,6 +437,176 @@ void PySimulation::SetLayerPatternCircle(std::string pyName, std::string pyMater
         }
     }
 
+void PySimulation::SetExcitationPlaneWave(py::array_t<double> pyAngle, py::array_t<double> pyPolS, py::array_t<double> pyPolP, int pyOrder)
+    {
+    double angle[2];
+    double pol_s[2];
+    double pol_p[2];
+    int order = pyOrder;
+
+    // destroy previous soltion
+    Simulation_DestroySolution(S);
+    // check and set memory for inputs
+    // Make the design decision to handle the conversion to radians at the
+    // python level, not the C++ level
+    py::buffer_info angleInfo = pyAngle.request();
+    // check that the center is appropriately formatted
+    if (angleInfo.ndim != 1)
+        {
+        std::ostringstream s;
+        s << "Angle must be a 1D array with 2 elements: [phi, theta]";
+        throw std::runtime_error(s.str());
+        }
+    else if (angleInfo.shape[0] != 2)
+        {
+        std::ostringstream s;
+        s << "Angle must be a 1D array with 2 elements: [phi, theta]";
+        throw std::runtime_error(s.str());
+        }
+    double *anglePtr = static_cast<double *>(angleInfo.ptr);
+    angle[0] = anglePtr[0];
+    angle[1] = anglePtr[1];
+
+    py::buffer_info polSInfo = pyPolS.request();
+    // check that the center is appropriately formatted
+    if (polSInfo.ndim != 1)
+        {
+        std::ostringstream s;
+        s << "PolS must be a 1D array with 2 elements: [Amplitude, Phase]";
+        throw std::runtime_error(s.str());
+        }
+    else if (polSInfo.shape[0] != 2)
+        {
+        std::ostringstream s;
+        s << "PolS must be a 1D array with 2 elements: [Amplitude, Phase]";
+        throw std::runtime_error(s.str());
+        }
+    double *polSPtr = static_cast<double *>(polSInfo.ptr);
+    pol_s[0] = polSPtr[0];
+    pol_s[1] = polSPtr[1];
+
+    py::buffer_info polPInfo = pyPolP.request();
+    // check that the center is appropriately formatted
+    if (polPInfo.ndim != 1)
+        {
+        std::ostringstream s;
+        s << "PolP must be a 1D array with 2 elements: [Amplitude, Phase]";
+        throw std::runtime_error(s.str());
+        }
+    else if (polPInfo.shape[0] != 2)
+        {
+        std::ostringstream s;
+        s << "PolP must be a 1D array with 2 elements: [Amplitude, Phase]";
+        throw std::runtime_error(s.str());
+        }
+    double *polPPtr = static_cast<double *>(polPInfo.ptr);
+    pol_p[0] = polPPtr[0];
+    pol_p[1] = polPPtr[1];
+
+    if (order > 0)
+        {
+        order--;
+        }
+    int ret = Simulation_MakeExcitationPlanewave(S, angle, pol_s, pol_p, order);
+    if (0 != ret)
+        {
+        std::ostringstream s;
+        s << "MakeExcitationPlanewave returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    }
+
+void PySimulation::SetFrequency(double pyFreqr, double pyFreqi)
+    {
+    // the wrapping at the python level will provide a value of
+    // zero for pyFreqi as a default
+    S4_real freq[2];
+    freq[0] = pyFreqr;
+    freq[1] = pyFreqi;
+    if (freq[0] <= 0)
+        {
+        std::ostringstream s;
+        s << "Real-part of frequency must be positive";
+        throw std::runtime_error(s.str());
+        }
+    if (freq[1] > 0)
+        {
+        std::ostringstream s;
+        s << "Imaginary-part of frequency must be Negative";
+        throw std::runtime_error(s.str());
+        }
+    S4_Simulation_SetFrequency(S, freq);
+    }
+
+void PySimulation::UseSubpixelSmoothing(bool pyUseSmoothing)
+    {
+    bool useSubpixelSmoothing = pyUseSmoothing;
+    S->options.use_subpixel_smoothing = useSubpixelSmoothing;
+    }
+
+void PySimulation::SetResolution(int pyResolution)
+    {
+    int res = pyResolution;
+    if (res < 2)
+        {
+        std::ostringstream s;
+        s << "Resolution must be an integer > 2";
+        throw std::runtime_error(s.str());
+        }
+    }
+
+py::array_t<double> PySimulation::TestArray()
+    {
+    // double testPtr[2];
+    // testPtr[0] = 2.0;
+    // testPtr[1] = 3.0;
+    std::vector<double> testPtr(2);
+    testPtr[0] = 2.0;
+    testPtr[1] = 3.0;
+    auto x = py::array_t<double>(2);
+    auto x_buffer = x.request();
+    std::memcpy(x_buffer.ptr, testPtr.data(), testPtr.size()*sizeof(double));
+    return x;
+    // x = py::array_t<double>(
+    //     {2},
+    //     {8},
+    //     testPtr);
+        // delete[] testPtr;
+        // )
+    }
+
+py::array_t<double> PySimulation::GetPoyntingFlux(std::string pyLayer, double pyZOffset)
+    {
+    // make sure python sends in pyZOffset as 0 by default
+    S4_real power[4];
+    const char *layer_name = pyLayer.c_str();
+    S4_LayerID layer;
+    S4_real offset = pyZOffset;
+
+    // get the layer by name
+    layer = S4_Simulation_GetLayerByName(S, layer_name);
+    if (layer < 0)
+        {
+        std::ostringstream s;
+        s << "S4_Layer named " << layer << " not found";
+        throw std::runtime_error(s.str());
+        }
+    int ret = S4_Simulation_GetPowerFlux(S, layer, &offset, power);
+
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "GetPowerFlux returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    // format the return value
+    auto pyPower = py::array_t<double>(4);
+    auto pyBuffer = pyPower.request();
+    std::memcpy(pyBuffer.ptr, power, 4*sizeof(double));
+    return pyPower;
+
+    }
+
 PYBIND11_MODULE(_S4, m)
     {
     m.doc() = "C++ wrapper for S4 RCWA Code. Care should be taken directly interacting with \
@@ -453,6 +623,12 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetLayer", &PySimulation::SetLayer)
         .def("_SetLayerThickness", &PySimulation::SetLayerThickness)
         .def("_SetLayerPatternCircle", &PySimulation::SetLayerPatternCircle)
+        .def("_SetExcitationPlaneWave", &PySimulation::SetExcitationPlaneWave)
+        .def("_SetFrequency", &PySimulation::SetFrequency)
+        .def("_UseSubpixelSmoothing", &PySimulation::UseSubpixelSmoothing)
+        .def("_SetResolution", &PySimulation::SetResolution)
+        .def("_TestArray", &PySimulation::TestArray)
+        .def("_GetPoyntingFlux", &PySimulation::GetPoyntingFlux)
         // .def("Clone", &S4_Simulation_Clone)
         // .def("New", &S4_Simulation_New)
         ;

@@ -54,6 +54,12 @@ class PySimulation
     void SetLayer(std::string pyName, double pyThickness, std::string pyBackground);
     void SetLayerThickness(std::string pyName, double pyThickness);
     void SetLayerPatternCircle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyRadius);
+    void SetExcitationPlaneWave(py::array_t<double> pyAngle, py::array_t<double> pyPolS, py::array_t<double> pyPolP, int pyOrder);
+    void SetFrequency(double pyFreqr, double pyFreqi);
+    void UseSubpixelSmoothing(bool pyUseSmoothing);
+    void SetResolution(int pyResolution);
+    py::array_t<double> TestArray();
+    py::array_t<double> GetPoyntingFlux(std::string pyLayer, double pyZOffset);
 
     private:
     S4_Simulation* S;

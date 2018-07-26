@@ -281,9 +281,167 @@ class Simulation:
         lCenter = np.require(lCenter, dtype=np.float64, requirements=["C"])
         lRadius = radius
         if not isinstance(radius, float):
-            print("input raidus is not a float. Casting to float")
+            print("input radius is not a float. Casting to float")
             lRadius = float(lRadius)
             print("using a value of radius = {}".format(lRadius))
         if lRadius < 0:
             raise RuntimeError("raidus must be positive")
         self._S4Sim._SetLayerPatternCircle(lName, lMaterial, lCenter, lRadius)
+
+    def SetExcitationPlaneWave(self, angle, polS, polP, order=1, useRadians=False):
+        """
+        Sets the excitation planewave incident upon the front (first specified layer)
+        of the structure. If both tilt angles are zero, then the planewave is normally
+        incident with the electric field polarized along the x-axis for the
+        p-polarization. The phase of each polarization is defined at the origin (z=0)
+
+        :param angle: (phi, theta) Angles (in degrees by default. set useRadians to True to use radians). phi, theta give spherical coordiante angles of the planewave k-vector. File in more later.
+        :param polS: amplitude, phase (in degrees, set useRadians to True to use radians) of the s-polarization
+        :param polP: amplitude, phase (in degrees, set useRadians to True to use radians) of the p-polarization
+        :param order: An optional positive integer specifying which order (mode index) to excite. Defaults to 1.
+        :param useRadians: set to True to input angles, phases in radians rather than the default degrees
+        :type angle: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type polS: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type polP: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type order: int
+        :type useRadians: bool
+        """
+        self._checkForSim()
+
+        # check types
+        lAngle = np.asarray(angle)
+        if not lAngle.ndim == 1:
+            raise RuntimeError("Angle must be a vector (1D array)")
+        if not lAngle.shape[0] == 2:
+            raise RuntimeError("Angle must be a 2 element vector (phi, theta)")
+        lAngle = np.require(lAngle, dtype=np.float64, requirements=["C"])
+
+        lPolS = np.asarray(polS)
+        if not lPolS.ndim == 1:
+            raise RuntimeError("polS must be a vector (1D array)")
+        if not lPolS.shape[0] == 2:
+            raise RuntimeError("polS must be a 2 element vector (amplitude, phase)")
+        lPolS = np.require(lPolS, dtype=np.float64, requirements=["C"])
+
+        lPolP = np.asarray(polP)
+        if not lPolP.ndim == 1:
+            raise RuntimeError("polP must be a vector (1D array)")
+        if not lPolP.shape[0] == 2:
+            raise RuntimeError("polP must be a 2 element vector (amplitude, phase)")
+        lPolP = np.require(lPolP, dtype=np.float64, requirements=["C"])
+
+        lOrder = order
+        if not isinstance(order, int):
+            print("input order is not an int. Casting to int")
+            lOrder = int(order)
+            print("using a value of order = {}".format(lOrder))
+        if lOrder < 1:
+            raise RuntimeError("order must be <= 1")
+
+        # convert to radians as required
+        if not useRadians:
+            # convert phi, theta
+            lAngle[0] *= (np.pi/180.0)
+            lAngle[1] *= (np.pi/180.0)
+            # convert the polarization
+            lPolS[1] *= (np.pi/180.0)
+            lPolP[1] *= (np.pi/180.0)
+
+        # call the C++ function
+        self._S4Sim._SetExcitationPlaneWave(lAngle, lPolS, lPolP, lOrder)
+
+    def SetFrequency(self, freqR, freqI=0.0):
+        """
+        Set the operating frequency of the system (and excitation)
+
+        :param freqR: The real frequency. This is not the angular frequency (2*:math:`\pi`*freqR)
+        :param freqI: The imaginary frequency of the system. Typically not specified and defaults to zero. If specified, must be negative
+        """
+        self._checkForSim()
+
+        lFreqR = freqR
+        if not isinstance(freqR, float):
+            print("freqR is not a float. Casting to float")
+            lFreqR = float(lFreqR)
+            print("using a value of freqR = {}".format(lFreqR))
+        if not freqI <= 0:
+            raise RuntimeError("freqI must be <= 0")
+        lFreqI = freqI
+        if not isinstance(freqI, float):
+            print("freqI is not a float. Casting to float")
+            lFreqI = float(lFreqI)
+            print("using a value of freqI = {}".format(lFreqI))
+        self._S4Sim._SetFrequency(lFreqR, lFreqI)
+
+    def UseSubpixelSmoothing(self, useSubpixelSmoothing):
+        """Enables or disables the use of second-order accurate epsilon averaging
+        rules within a pixel. The average epsilon within a pixel is computed
+        using the fill factor of each material and the interface direction.
+
+        :param useSubpixelSmoothing: set to True to enable
+        :type useSubpixelSmoothing: bool
+        """
+        self._checkForSim()
+
+        lUse = useSubpixelSmoothing
+        if not isinstance(useSubpixelSmoothing, bool):
+            print("useSubpixelSmoothing is not of type bool; attempting to cast")
+            lUse = bool(useSubpixelSmoothing)
+            print("using value for useSubpixelSmoothing = {}".format(lUse))
+        self._S4Sim._UseSubpixelSmoothing(lUse)
+
+    def SetResolution(self, resolution=8):
+        """
+        Set the resolution of the system. Lots of notes here.
+
+        :param resolution: integer multiple to multiply the largest G-vector by
+        (must be 2 to satisfy the Nyquist limit)
+        :type resolution: int
+        """
+        self._checkForSim()
+
+        lRes = resolution
+        if not isinstance(resolution, int):
+            print("resolution is not an integer; attempting to cast")
+            lRes = int(resolution)
+            print("using a value of resolution = {}".format(resolution))
+        self._S4Sim._SetResolution(lRes)
+
+    def TestArray(self):
+        """
+        """
+        self._checkForSim()
+        x = self._S4Sim._TestArray()
+        print(x)
+
+    def GetPoyntingFlux(self, layer, offset=0.0):
+        """
+        Get the Poynting Flux
+
+        :param layer: name of layer
+        :param offset: offset from the beginning of the layer
+        :type layer: str
+        :type offset: float
+
+        :return: power flux [forward_real, backward_real,
+        forward_imaginary, backward_imaginary]
+        :type: :class:`numpy.ndarray`, shape=(4,), dtype=np.float64
+
+        TODO: fix issue with (print(S.GetPoyntingFlux(<layer>))) that
+        results in a malloc error; may be alright. Be on the lookout
+        """
+        self._checkForSim()
+
+        if not isinstance(layer, str):
+            raise RuntimeError("Layer must be a string")
+        lLayer = layer
+
+        lOffset = offset
+        if not isinstance(offset, float):
+            print("offset should be a float; attempting to cast")
+            lOffset = float(offset)
+            print("using a value of offset = {}".format(lOffset))
+
+        # get the data
+        powerFlux = self._S4Sim._GetPoyntingFlux(lLayer, lOffset)
+        return powerFlux
