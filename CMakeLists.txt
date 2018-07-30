@@ -12,29 +12,13 @@ project (S4)
 
 add_subdirectory(CMake)
 
-# find TBB lib and includes
-# find_library(TBB_LIBRARY tbb
-             # PATHS ENV TBB_LINK)
-# find_path(TBB_INCLUDE_DIR tbb/tbb.h
-          # PATHS ENV TBB_INC)
-# include_directories(${TBB_INCLUDE_DIR})
-# if (TBB_LIBRARY)
-    # mark_as_advanced(TBB_LIBRARY)
-# endif()
-# if (TBB_INCLUDE_DIR)
-    # mark_as_advanced(TBB_INCLUDE_DIR)
-# endif()
-
-# find ISPC
-# find_program(ISPC_EXECUTABLE ispc)
-# if (ISPC_EXECUTABLE)
-#     mark_as_advanced(ISPC_EXECUTABLE)
-# endif()
-
+# Find Lua (may eventually be removed due to not using lua)
 include(FindLua)
 include_directories(${LUA_INCLUDES})
+# Find FFTW
 include(FindFFTW)
 include_directories(${FFTW3_INC})
+# Find Accelerators
 include(FindAccelerators)
 include_directories(${vecLib_INCLUDES})
 
@@ -45,7 +29,6 @@ include_directories(${vecLib_INCLUDES})
 
 include(S4CFlagsSetup)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
-# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -msse3 -msse2 -msse -Wno-unknown-pragmas -Wno-deprecated-declarations")
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC -Wall -msse3 -msse2 -msse")
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wall -msse3 -msse2 -msse")
 
@@ -53,18 +36,12 @@ set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fPIC -Wall -msse3 -msse2 -msse")
 include(S4PythonSetup)
 include_directories(${PYTHON_INCLUDE_DIR})
 
-# setup cython
-# include(S4CythonSetup)
-# find_package(Cython)
-# include(UseCython)
+# I should eventually add pybind11 as a submodule
 find_package(pybind11)
 
 # setup numpy
 include (S4NumpySetup)
 include_directories(${NUMPY_INCLUDE_DIR})
-# cython uses the deprecated api, so these remain commented til further notice
-# add_definitions(-DPY_ARRAY_UNIQUE_SYMBOL=PyArrayHandle)
-# add_definitions(-DNPY_NO_DEPRECATED_API=NPY_1_7_API_VERSION)
 
 # macros
 include (S4Macros)
@@ -73,6 +50,7 @@ include(S4MPISetup)
 include_directories(${MPI_CXX_INCLUDE_DIRS})
 link_directories(${MPI_CXX_LIBRARIES})
 
+# Keep around for eventually adding in pybind as a submodule
 # include external source projects
 # include_directories(${CMAKE_CURRENT_SOURCE_DIR}/extern)
 
@@ -92,18 +70,15 @@ IF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 ENDIF(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
 
 # Fixup conda linking, if this python appears to be a conda python
-# if (${CMAKE_MAJOR_VERSION} GREATER 2)
-  # get_filename_component(_python_bin_dir ${PYTHON_EXECUTABLE} DIRECTORY)
-  # if (EXISTS "${_python_bin_dir}/conda")
-      # message("-- Detected conda python, activating workaround")
-      # set(_using_conda On)
-  # else()
-      # set(_using_conda Off)
-  # endif()
-# endif()
+if (${CMAKE_MAJOR_VERSION} GREATER 2)
+  get_filename_component(_python_bin_dir ${PYTHON_EXECUTABLE} DIRECTORY)
+  if (EXISTS "${_python_bin_dir}/conda")
+      message("-- Detected conda python, activating workaround")
+      set(_using_conda On)
+  else()
+      set(_using_conda Off)
+  endif()
+endif()
 
-#add_subdirectory(freud)
-# include(freud/CMakeLists.txt)
-# add_subdirectory(S4)
 add_subdirectory(cpp)
 # add_subdirectory(doc)

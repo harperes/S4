@@ -11,6 +11,7 @@ find_package(MPI REQUIRED)
 # set with the CMake package
 GET_FILENAME_COMPONENT(MPI_DIR ${MPI_C_COMPILER} DIRECTORY)
 GET_FILENAME_COMPONENT(MPI_DIR ${MPI_DIR} DIRECTORY)
+# right now these may throw an error, so fix or ignore the compiler warnings
 set(MPI_LIBRARY ${MPI_DIR}/lib)
 set(MPI_C_LIBRARIES ${MPI_DIR}/lib)
 set(MPI_CXX_LIBRARIES ${MPI_DIR}/lib)
