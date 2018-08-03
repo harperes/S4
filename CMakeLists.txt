@@ -13,19 +13,15 @@ project (S4)
 add_subdirectory(CMake)
 
 # Find Lua (may eventually be removed due to not using lua)
-include(FindLua)
-include_directories(${LUA_INCLUDES})
+# include(FindLua)
+# include_directories(${LUA_INCLUDES})
 # Find FFTW
 include(FindFFTW)
 include_directories(${FFTW3_INC})
 # Find Accelerators
 include(FindAccelerators)
-include_directories(${vecLib_INCLUDES})
-
-# set(BLAS_LIBRARIES "-framework Accelerate")
-# mark_as_advanced(BLAS_LIBRARIES)
-# set(LAPACK_LIBRARIES -framework Accelerate)
-# mark_as_advanced(LAPACK_LIBRARIES LAPACK_INCLUDES)
+# This may be needed on APPLE; if so, re-enable
+# include_directories(${vecLIB_INCLUDES})
 
 include(S4CFlagsSetup)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
