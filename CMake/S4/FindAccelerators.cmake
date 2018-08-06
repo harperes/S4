@@ -3,12 +3,18 @@
 
 if (NOT APPLE)
 
-  set(vecLIB_LINKER_LIBS -llapack -lblas)
-  mark_as_advanced(vecLib_LINKER_LIBS)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_BLAS")
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_LAPACK")
+# I need lines here to allow an env var set...unless there's a BLAS helper for that already...
 
-else()
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
+
+ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${BLAS_LINKER_FLAGS} -lcblas -lblas -DHAVE_BLAS ${LAPACK_LINKER_FLAGS} -DHAVE_LAPACK -llapack")
+ mark_as_advanced(BLAS_LIBRARIES)
+ mark_as_advanced(LAPACK_LIBRARIES)
+ set(LINALG_LIBS ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES} CACHE PATH "LIBRARIES NEEDED FOR LINEAR ALGEBRA ACCELERATION")
+ mark_as_advanced(LINALG_LIBS)
+
+else(NOT APPLE)
 
   set(__veclib_include_suffix "Frameworks/vecLib.framework/Versions/Current/Headers")
   exec_program(xcode-select ARGS -print-path OUTPUT_VARIABLE CMAKE_XCODE_DEVELOPER_DIR)
@@ -32,12 +38,14 @@ else()
     endif()
     mark_as_advanced(vecLib_INCLUDES)
     mark_as_advanced(vecLib_LINKER_LIBS)
-  endif()
+  endif(vecLIB_FOUND)
 
   # set(vecLib_LINKER_LIBS -lcblas "-framework Accelerate")
   set(vecLib_LINKER_LIBS "-framework Accelerate")
   mark_as_advanced(vecLib_LINKER_LIBS)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_BLAS")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -DHAVE_LAPACK")
+
+  set(LINALG_LIBS "-framework Accelerate" CACHE STRING "LIBRARIES NEEDED FOR LINEAR ALGEBRA ACCELERATION")
   
-endif()
+endif(NOT APPLE)
