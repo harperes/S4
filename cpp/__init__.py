@@ -373,22 +373,139 @@ class Simulation:
             print("using a value of freqI = {}".format(lFreqI))
         self._S4Sim._SetFrequency(lFreqR, lFreqI)
 
-    def UseSubpixelSmoothing(self, useSubpixelSmoothing):
+    # Settings for Fourier Modal Methods
+
+    def UseDiscretizedEpsilon(self, use=True):
+        """
+        Enables or disables the use of discretization in generating the Fourier
+        coefficients of the in-plane epsilon profiles, instead of using values
+        from closed-form equations. When enabled, the coefficients are obtained
+        by FFT.
+
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+        self._S4Sim._UseDiscretizedEpsilon(lUse)
+
+
+    def UseSubpixelSmoothing(self, use=True):
         """Enables or disables the use of second-order accurate epsilon averaging
         rules within a pixel. The average epsilon within a pixel is computed
         using the fill factor of each material and the interface direction.
 
-        :param useSubpixelSmoothing: set to True to enable
-        :type useSubpixelSmoothing: bool
+        :param use: set to True to enable
+        :type use: bool
         """
         self._checkForSim()
 
-        lUse = useSubpixelSmoothing
-        if not isinstance(useSubpixelSmoothing, bool):
-            print("useSubpixelSmoothing is not of type bool; attempting to cast")
-            lUse = bool(useSubpixelSmoothing)
-            print("using value for useSubpixelSmoothing = {}".format(lUse))
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
         self._S4Sim._UseSubpixelSmoothing(lUse)
+
+    def UseLanczosSmoothing(self, use=True):
+        """
+        Enables of disables smoothing of the Fourier series representations of
+        the layer dielectric constants using the Lanczos sigma factor (box filtering).
+        This reduces the Gibbs phenomenon ringing in the real space reconstruction.
+
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+        self._S4Sim._UseLanczosSmoothing(lUse)
+
+    def UsePolarizationDecomposition(self, use=True):
+        """
+        Enables of disables the use of proper in-plane Fourier factorization
+        rules by decomposing fields into a polarization basis which conforms
+        to the material boundaries. The polarization basis field is
+        generated automatically by computing a quasi-harmonic vector field
+        everywhere tangent to the layer pattern boundaries. This option is
+        not guaranteed to work in the presence of tensor dielectric constants
+
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+        self._S4Sim._UsePolarizationDecomposition(lUse)
+
+    def UseJonesVectorBasis(self, use=True):
+        """
+        This option only has an effect with UsePolarizationDecomposition().
+        When enabled, a Jones bector basis field is used intead of a conformal
+        harmonic field. Enabling this feature may improve convergence with
+        respect to the number of G-vectors.
+
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+
+        self._S4Sim._UseJonesVectorBasis(lUse)
+
+    def UseNormalVectorBasis(self, use=True):
+        """
+        This option only has an effect with UsePolarizationDecomposition().
+        When enabled, the resulting vector field is normalized. Where the
+        vector field is zero, the unit vector in the x-direction is used.
+        Enabling this feature may improve convergence with respect to the
+        number of G-vectors.
+
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+
+        self._S4Sim._UseNormalVectorBasis(lUse)
+
+    def UseExperimentalFMM(self, use=True):
+        """
+        :param use: set to True to enable
+        :type use: bool
+        """
+        self._checkForSim()
+
+        lUse = use
+        if not isinstance(use, bool):
+            print("use is not of type bool; attempting to cast")
+            lUse = bool(use)
+            print("using value for use = {}".format(lUse))
+
+        self._S4Sim._UseExperimentalFMM(lUse)
 
     def SetResolution(self, resolution=8):
         """

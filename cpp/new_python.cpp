@@ -538,10 +538,46 @@ void PySimulation::SetFrequency(double pyFreqr, double pyFreqi)
     S4_Simulation_SetFrequency(S, freq);
     }
 
-void PySimulation::UseSubpixelSmoothing(bool pyUseSmoothing)
+void PySimulation::UseDiscretizedEpsilon(bool pyUse)
     {
-    bool useSubpixelSmoothing = pyUseSmoothing;
-    S->options.use_subpixel_smoothing = useSubpixelSmoothing;
+    bool use = pyUse;
+    S->options.use_discretized_epsilon = use;
+    }
+
+void PySimulation::UseSubpixelSmoothing(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_subpixel_smoothing = use;
+    }
+
+void PySimulation::UseLanczosSmoothing(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_Lanczos_smoothing = use;
+    }
+
+void PySimulation::UsePolarizationDecomposition(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_polarization_basis = use;
+    }
+
+void PySimulation::UseJonesVectorBasis(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_jones_vector_basis = use;
+    }
+
+void PySimulation::UseNormalVectorBasis(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_normal_vector_basis = use;
+    }
+
+void PySimulation::UseExperimentalFMM(bool pyUse)
+    {
+    bool use = pyUse;
+    S->options.use_experimental_fmm = use;
     }
 
 void PySimulation::SetResolution(int pyResolution)
@@ -625,7 +661,13 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetLayerPatternCircle", &PySimulation::SetLayerPatternCircle)
         .def("_SetExcitationPlaneWave", &PySimulation::SetExcitationPlaneWave)
         .def("_SetFrequency", &PySimulation::SetFrequency)
+        .def("_UseDiscretizedEpsilon", &PySimulation::UseDiscretizedEpsilon)
         .def("_UseSubpixelSmoothing", &PySimulation::UseSubpixelSmoothing)
+        .def("_UseLanczosSmoothing", &PySimulation::UseLanczosSmoothing)
+        .def("_UsePolarizationDecomposition", &PySimulation::UsePolarizationDecomposition)
+        .def("_UseJonesVectorBasis", &PySimulation::UseJonesVectorBasis)
+        .def("_UseNormalVectorBasis", &PySimulation::UseNormalVectorBasis)
+        .def("_UseExperimentalFMM", &PySimulation::UseExperimentalFMM)
         .def("_SetResolution", &PySimulation::SetResolution)
         .def("_TestArray", &PySimulation::TestArray)
         .def("_GetPoyntingFlux", &PySimulation::GetPoyntingFlux)

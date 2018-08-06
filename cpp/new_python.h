@@ -56,7 +56,14 @@ class PySimulation
     void SetLayerPatternCircle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyRadius);
     void SetExcitationPlaneWave(py::array_t<double> pyAngle, py::array_t<double> pyPolS, py::array_t<double> pyPolP, int pyOrder);
     void SetFrequency(double pyFreqr, double pyFreqi);
-    void UseSubpixelSmoothing(bool pyUseSmoothing);
+    // Fourier Modal Methods Settings
+    void UseDiscretizedEpsilon(bool pyUse);
+    void UseSubpixelSmoothing(bool pyUse);
+    void UseLanczosSmoothing(bool pyUse);
+    void UsePolarizationDecomposition(bool pyUse);
+    void UseJonesVectorBasis(bool pyUse);
+    void UseNormalVectorBasis(bool pyUse);
+    void UseExperimentalFMM(bool pyUse);
     void SetResolution(int pyResolution);
     py::array_t<double> TestArray();
     py::array_t<double> GetPoyntingFlux(std::string pyLayer, double pyZOffset);
