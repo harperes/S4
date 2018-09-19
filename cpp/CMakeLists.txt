@@ -62,7 +62,7 @@ add_library(testS4 SHARED ${SOURCES})
 # target_link_libraries(testS4 ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
 target_link_libraries(testS4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
 pybind11_add_module(_S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp)
-target_link_libraries(_S4 PRIVATE $<TARGET_FILE:testS4> ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} )
+target_link_libraries(_S4 PRIVATE testS4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} )
 
 
 # I need to fix this since this apparently isn't correct...

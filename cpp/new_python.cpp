@@ -87,10 +87,19 @@ PySimulation::EPSData PySimulation::SetEPS(py::array_t<double> pyEPS)
             eps[1] = ptr[1];
             type = S4_MATERIAL_TYPE_SCALAR_COMPLEX;
             }
+        // Can I also handle 18?
         else if (info.shape[0] == 9)
             {
             // this is a tensor in a flat form; accept anyway
             for (size_t t=0; t < 9; ++t)
+                {
+                eps[t] = ptr[2*t];
+                }
+            type = S4_MATERIAL_TYPE_XYTENSOR_COMPLEX;
+            }
+        else if (info.shape[0] == 18)
+            {
+              for (size_t t=0; t < 18; ++t)
                 {
                 eps[t] = ptr[t];
                 }
@@ -107,22 +116,23 @@ PySimulation::EPSData PySimulation::SetEPS(py::array_t<double> pyEPS)
             throw std::runtime_error(s.str());
             }
         }
-    else if (info.ndim == 2)
+    else if (info.ndim == 3)
         {
         // tensor; check that it is 3x3
         int nx = info.shape[0];
         int ny = info.shape[1];
-        if ((nx != 3) || (ny != 3))
+        int nz = info.shape[2];
+        if ((nx != 3) || (ny != 3) || (nz != 2))
             {
             // create a string stream object
             std::ostringstream s;
             // write the error, including the size of the array
-            s << "The tensor form of eps must be a 3 x 3 matrix;"
-              << " provided matrix is: " << nx << " x " << ny << std::endl;
+            s << "The tensor form of eps must be a 3 x 3 x 2 matrix;"
+              << " provided matrix is: " << nx << " x " << ny << "x" << nz << std::endl;
             // throw runtime error. For now everything will be a runtime error
             throw std::runtime_error(s.str());
             }
-        for (size_t t=0; t < 9; ++t)
+        for (size_t t=0; t < 18; ++t)
             {
             eps[t] = ptr[t];
             }
@@ -142,7 +152,7 @@ PySimulation::EPSData PySimulation::SetEPS(py::array_t<double> pyEPS)
         std::ostringstream s;
         // write the error, including the size of the array
         s << "The array provided is of dimensionality "
-          << ". Only 1 or 2 dimensional arrays are accepted." << std::endl;
+          << ". Only 1 or 3 dimensional arrays are accepted." << std::endl;
         // throw runtime error. For now everything will be a runtime error
         throw std::runtime_error(s.str());
         }
@@ -226,30 +236,22 @@ void PySimulation::SetMaterial(std::string pyName, py::array_t<double> pyEPS)
 void PySimulation::SetLattice(py::array_t<double> pyLattice)
     {
     // set the lattice basis vectors
-
+    S4_real Lr[4];
     // get the information about the incoming numpy array
     py::buffer_info info = pyLattice.request();
     double *ptr = static_cast<double *>(info.ptr);
-    if (info.ndim != 2)
+    if (info.ndim == 1)
         {
-        std:: ostringstream s;
-        s << "lattice constant must be a 2-dimensional (2 x 2) array";
-        throw std::runtime_error(s.str());
+        // handle the 1D case
+        Lr[0] = ptr[0];
         }
-    int nx = info.shape[0];
-    int ny = info.shape[1];
-    if ((nx != 2) || (ny != 2))
+    else if(info.ndim == 2)
         {
-        std:: ostringstream s;
-        s << "The tensor form of eps must be a 2 x 2 matrix;"
-          << " provided matrix is: " << nx << " x " << ny << std::endl;
-        throw std::runtime_error(s.str());
-        }
-    // Create array to pass into S4
-    S4_real Lr[4];
-    for (size_t i = 0; i < 4; ++i)
-        {
-        Lr[i] = ptr[i];
+        // Create array to pass into S4
+        for (size_t i = 0; i < 4; ++i)
+            {
+            Lr[i] = ptr[i];
+            }
         }
     int setLatticeReturn = S4_Simulation_SetLattice(S, Lr);
     if(0 != setLatticeReturn)
@@ -433,6 +435,66 @@ void PySimulation::SetLayerPatternCircle(std::string pyName, std::string pyMater
         {
         std::ostringstream s;
         s << "SetLayerPatternCircle: There was a problem allocating the pattern.";
+        throw std::runtime_error(s.str());
+        }
+    }
+
+void PySimulation::SetLayerPatternPolygon(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, py::array_t<double> pyVertices, double pyAngle)
+    {
+    const char *layer_name = pyName.c_str();
+    const char *material_name = pyMaterial.c_str();
+    // the original S4 code stores this as a flat list of vectors
+    // {x1, y1, x2, y2 ... xn, yn}
+    std::vector<double> vert;
+    double center[2];
+    S4_LayerID layer;
+    S4_MaterialID M;
+    //handle the center
+    py::buffer_info center_info = pyCenter.request();
+    double *center_ptr = static_cast<double *>(center_info.ptr);
+
+    py::buffer_info vertex_info = pyVertices.request();
+    double *vertex_ptr = static_cast<double *>(vertex_info.ptr);
+
+    S4_real angle = pyAngle;
+    // resize vert list
+    vert.resize((int)(vertex_info.shape[0]*vertex_info.shape[1]));
+
+    layer = S4_Simulation_GetLayerByName(S, layer_name);
+    // can't find layer
+    if (layer < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternCircle: Layer " << layer_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    if (S4_Layer_IsCopy(S, layer) > 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternCircle: Cannot pattern a layer copy.";
+        throw std::runtime_error(s.str());
+        }
+    M = S4_Simulation_GetMaterialByName(S, material_name);
+    if (M < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternCircle: Material named " << material_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    center[0] = center_ptr[0];
+    center[1] = center_ptr[1];
+
+    // lets see if I can do a memcpy/memset
+    int l_size = vertex_info.shape[0] * vertex_info.shape[1];
+    int nvert = vertex_info.shape[0];
+    std::memcpy(vert.data(), vertex_ptr, l_size*sizeof(double));
+
+    int ret = S4_Layer_SetRegionVertices(S, layer, M, S4_REGION_TYPE_POLYGON, nvert, vert.data(), center, &angle);
+
+    if(ret != 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternPolygon: There was a problem allocating the pattern.";
         throw std::runtime_error(s.str());
         }
     }
@@ -659,6 +721,7 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetLayer", &PySimulation::SetLayer)
         .def("_SetLayerThickness", &PySimulation::SetLayerThickness)
         .def("_SetLayerPatternCircle", &PySimulation::SetLayerPatternCircle)
+        .def("_SetLayerPatternPolygon", &PySimulation::SetLayerPatternPolygon)
         .def("_SetExcitationPlaneWave", &PySimulation::SetExcitationPlaneWave)
         .def("_SetFrequency", &PySimulation::SetFrequency)
         .def("_UseDiscretizedEpsilon", &PySimulation::UseDiscretizedEpsilon)

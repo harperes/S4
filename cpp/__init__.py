@@ -16,7 +16,7 @@ class Simulation:
         # could thing about automatically creating a simulation...
         self._hasSim = False
 
-    def _checkForSim(self):
+    def _check_for_sim(self):
         """
         Helper function to check to make sure that a simulation object exists;
         otherwise, segmentation faults may occur
@@ -24,7 +24,7 @@ class Simulation:
         if not self._hasSim:
             raise RuntimeError("No simulation found. Aborting.")
 
-    def CreateNew(self):
+    def create_new(self):
         """
         Create a new simulation instance
 
@@ -32,31 +32,31 @@ class Simulation:
         self._S4Sim._CreateNew()
         self._hasSim = True
 
-    def _MaterialArrayCheck(self, eps):
+    def _material_array_check(self, eps):
         """
         Helper function to check values of the eps array
 
         :param eps: epsilon value of material
         :type eps: lorem ipsum
 
-        :return: lEPS
+        :return: l_eps
         :type: lorem ipsum
         """
 
-        lEPS = np.asarray(eps)
-        if lEPS.ndim > 2:
+        l_eps = np.asarray(eps)
+        if l_eps.ndim > 3:
             raise RuntimeError("eps must be a 1- or 2-Dimensional array")
-        if lEPS.ndim == 1:
-            ndims = [1, 2, 9]
-            if not lEPS.shape[0] in ndims:
-                raise RuntimeError("the shape of eps must be a 1, 2, or 9 element array")
-        elif lEPS.ndim == 2:
-            if not (lEPS.shape[0] == 3) and (lEPS.shape[1] == 3):
-                raise RuntimeError("eps must be a 3x3 array")
-        lEPS = np.require(lEPS, dtype=np.float64, requirements=["C"])
-        return lEPS
+        if l_eps.ndim == 1:
+            ndims = [1, 2, 18]
+            if not l_eps.shape[0] in ndims:
+                raise RuntimeError("the shape of eps must be a 1, 2, or 18 element array")
+        elif l_eps.ndim == 3:
+            if not (l_eps.shape[0] == 3) and (l_eps.shape[1] == 3) and (l_eps.shape[2] == 2):
+                raise RuntimeError("eps must be a 3x3x2 array")
+        l_eps = np.require(l_eps, dtype=np.float64, requirements=["C"])
+        return l_eps
 
-    def AddMaterial(self, name, eps):
+    def add_material(self, name, eps):
         """
         Add a material to the simulation
 
@@ -67,18 +67,18 @@ class Simulation:
         dtype=:class:`numpy.float`
         """
         # check to make sure a simulation exists
-        self._checkForSim()
+        self._check_for_sim()
 
         # check types, raise errors as needed
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
-        lEPS = self._MaterialArrayCheck(eps)
+            l_name = name
+        l_eps = self._material_array_check(eps)
         # add the material as requested
-        self._S4Sim._AddMaterial(lName, lEPS)
+        self._S4Sim._AddMaterial(l_name, l_eps)
 
-    def SetMaterial(self, name, eps):
+    def set_material(self, name, eps):
         """
         Set a material to the simulation
 
@@ -89,39 +89,44 @@ class Simulation:
         dtype=:class:`numpy.float`
         """
         # check to make sure a simulation exists
-        self._checkForSim()
+        self._check_for_sim()
 
         # check types, raise errors as needed
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
-        lEPS = self._MaterialArrayCheck(eps)
+            l_name = name
+        l_eps = self._material_array_check(eps)
         # add the material as requested
-        self._S4Sim._SetMaterial(lName, lEPS)
+        self._S4Sim._SetMaterial(l_name, l_eps)
 
-    def SetLattice(self, basisVectors):
+    def set_lattice(self, basis_vectors):
         """
         Set the basis vectors for a simulation
 
-        :param basisVectors: pair of vectors specifying the lattice basic vectors
-        :type basisVectors: :class:`numpy.ndarray`, shape=(:math:`left(2,2)`, dtype=:class:`numpy.float`)
+        :param basis_vectors: pair of vectors specifying the lattice basic vectors
+        :type basis_vectors: :class:`numpy.ndarray`, shape=(:math:`left(2,2)`, dtype=:class:`numpy.float`)
         """
         # check to make sure a simulation exists
-        self._checkForSim()
+        self._check_for_sim()
 
-        # make sure the lBV is correctly sized
-        lBV = np.asarray(basisVectors)
-        if lBV.ndim != 2:
-            raise RuntimeError("basis vectors must be a 2-Dimensional array")
-        if not ((lBV.shape[0] == 2) and (lBV.shape[1] == 2)):
-            raise RuntimeError("lBV must be a 2x2 array")
-        lBV = np.require(lBV, dtype=np.float64, requirements=["C"])
+        # make sure the l_bv is correctly sized
+        # this may get a bit tricky
+        l_bv = np.asarray(basis_vectors)
+        if l_bv.ndim not in [0, 2]:
+            raise RuntimeError("basis vectors must be a either a single number for a 1D lattice, or 2-Dimensional array for a 2D lattice")
+        if l_bv.ndim == 0:
+            # fix to avoid issues in C++
+            l_bv = np.array([basis_vectors])
+        else:
+            if not ((l_bv.shape[0] == 2) and (l_bv.shape[1] == 2)):
+                raise RuntimeError("l_bv must be a 2x2 array")
+        l_bv = np.require(l_bv, dtype=np.float64, requirements=["C"])
 
         # pass into the function
-        self._S4Sim._SetLattice(lBV)
+        self._S4Sim._SetLattice(l_bv)
 
-    def SetNumG(self, n):
+    def set_num_g(self, n):
         """
         Set the maximum number of in-plane (x and y) Fourier expansion orders to use.
 
@@ -132,7 +137,7 @@ class Simulation:
         :type n: int
         """
         # check to make sure a simulation exists
-        self._checkForSim()
+        self._check_for_sim()
 
         if not isinstance(n, int):
             print("input n is not an int. Casting to int")
@@ -142,7 +147,7 @@ class Simulation:
             raise RuntimeError("n must be >= 1")
         self._S4Sim._SetNumG(n)
 
-    def GetNumG(self):
+    def get_num_g(self):
         """
         Get the current number of Fourier expansion orders
 
@@ -150,12 +155,12 @@ class Simulation:
         :type: int
         """
 
-        self._checkForSim()
+        self._check_for_sim()
 
         n = self._S4Sim._GetNumG()
         return n
 
-    def AddLayer(self, name, thickness, background):
+    def add_layer(self, name, thickness, background):
         """
         Add a layer to your simulation object
 
@@ -166,28 +171,28 @@ class Simulation:
         :type thickness: float
         :type background: str
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         # handle quick error checking
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
+            l_name = name
         if not isinstance(thickness, float):
             print("Warning: thickness not a float; attempting to cast to float")
-            lThickness = float(thickness)
-            print("Using thickness = {}".format(lThickness))
+            l_thickness = float(thickness)
+            print("Using thickness = {}".format(l_thickness))
         else:
-            lThickness = thickness
+            l_thickness = thickness
         if not isinstance(background, str):
             raise RuntimeError("background must be str")
         else:
-            lBackground = background
+            l_background = background
 
         # call the function
-        self._S4Sim._AddLayer(lName, lThickness, lBackground)
+        self._S4Sim._AddLayer(l_name, l_thickness, l_background)
 
-    def SetLayer(self, name, thickness, background):
+    def set_layer(self, name, thickness, background):
         """
         Updates an existing layer with a new thickness and removes all layer
         patterning. If no matching layer is found, adds a new upatterned layer
@@ -200,28 +205,28 @@ class Simulation:
         :type thickness: float
         :type background: str
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         # handle quick error checking
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
+            l_name = name
         if not isinstance(thickness, float):
             print("Warning: thickness not a float; attempting to cast to float")
-            lThickness = float(thickness)
-            print("Using thickness = {}".format(lThickness))
+            l_thickness = float(thickness)
+            print("Using thickness = {}".format(l_thickness))
         else:
-            lThickness = thickness
+            l_thickness = thickness
         if not isinstance(background, str):
             raise RuntimeError("background must be str")
         else:
-            lBackground = background
+            l_background = background
 
         # call the function
-        self._S4Sim._SetLayer(lName, lThickness, lBackground)
+        self._S4Sim._SetLayer(l_name, l_thickness, l_background)
 
-    def SetLayerThickness(self, name, thickness):
+    def set_layer_thickness(self, name, thickness):
         """
         Set the thickness of layer. Layer must exist and thickness must be
         non-negative.
@@ -231,23 +236,23 @@ class Simulation:
         :type name: str
         :type thickness: float
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         # handle quick error checking
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
+            l_name = name
         if not isinstance(thickness, float):
             print("Warning: thickness not a float; attempting to cast to float")
-            lThickness = float(thickness)
-            print("Using thickness = {}".format(lThickness))
+            l_thickness = float(thickness)
+            print("Using thickness = {}".format(l_thickness))
         else:
-            lThickness = thickness
+            l_thickness = thickness
         # call the function
-        self._S4Sim._SetLayerThickness(lName, lThickness)
+        self._S4Sim._SetLayerThickness(l_name, l_thickness)
 
-    def SetLayerPatternCircle(self, name, material, center, radius):
+    def set_layer_pattern_circle(self, name, material, center, radius):
         """
         Adds a filled circle of a specified material to an existing non-coy layer.
 
@@ -262,120 +267,160 @@ class Simulation:
         :type material: str
         :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         # type checks
         if not isinstance(name, str):
             raise RuntimeError("name must be str")
         else:
-            lName = name
+            l_name = name
         if not isinstance(material, str):
             raise RuntimeError("material must be str")
         else:
-            lMaterial = material
-        lCenter = np.asarray(center)
-        if not lCenter.ndim == 1:
+            l_material = material
+        l_center = np.asarray(center)
+        if not l_center.ndim == 1:
             raise RuntimeError("Center must be a vector (1D array)")
-        if not lCenter.shape[0] == 2:
+        if not l_center.shape[0] == 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
-        lCenter = np.require(lCenter, dtype=np.float64, requirements=["C"])
-        lRadius = radius
+        l_center = np.require(l_center, dtype=np.float64, requirements=["C"])
+        l_radius = radius
         if not isinstance(radius, float):
             print("input radius is not a float. Casting to float")
-            lRadius = float(lRadius)
-            print("using a value of radius = {}".format(lRadius))
-        if lRadius < 0:
+            l_radius = float(l_radius)
+            print("using a value of radius = {}".format(l_radius))
+        if l_radius < 0:
             raise RuntimeError("raidus must be positive")
-        self._S4Sim._SetLayerPatternCircle(lName, lMaterial, lCenter, lRadius)
+        self._S4Sim._SetLayerPatternCircle(l_name, l_material, l_center, l_radius)
 
-    def SetExcitationPlaneWave(self, angle, polS, polP, order=1, useRadians=False):
+    def set_layer_pattern_polygon(self, name, material, center, vertices, angle=0.0, use_radians=False):
+        """
+        """
+
+        self._check_for_sim()
+
+        # type checks
+        if not isinstance(name, str):
+            raise RuntimeError("name must be a str")
+        else:
+            l_name = name
+        if not isinstance(material, str):
+            raise RuntimeError("material must be a str")
+        else:
+            l_material = material
+        l_center = np.asarray(center)
+        if not l_center.ndim == 1:
+            raise RuntimeError("Center must be a vector (1D array)")
+        if not l_center.shape[0] == 2:
+            raise RuntimeError("Center must be a 2 element vector (x, y)")
+        l_vertices = np.asarray(vertices)
+        if not l_vertices.ndim == 2:
+            raise RuntimeError("vertices must be a list of vectors (2D array)")
+        if not l_vertices.shape[1] == 2:
+            raise RuntimeError("each vertex must be a 2 element vector (x, y)")
+        num_vertices = l_vertices.shape[0]
+
+        # there is something strange going on with the ability to rotate the polygon
+        # main_lua.c has `S4_real angle = luaL_checknumber(L, 5) / 360.;` implying
+        # that somehow the input angle is divided into a fraction of a full rotation
+        # rather than something like radians
+        # It is an angle fraction, so we will handle here, not buried in C++
+        l_angle = angle
+        if use_radians:
+            l_angle /= (np.pi / 2.0)
+        else:
+            l_angle /= 360.0
+
+        self._S4Sim._SetLayerPatternPolygon(l_name, l_material, l_center, l_vertices, l_angle)
+
+    def set_excitation_planewave(self, angle, pol_s, pol_p, order=1, use_radians=False):
         """
         Sets the excitation planewave incident upon the front (first specified layer)
         of the structure. If both tilt angles are zero, then the planewave is normally
         incident with the electric field polarized along the x-axis for the
         p-polarization. The phase of each polarization is defined at the origin (z=0)
 
-        :param angle: (phi, theta) Angles (in degrees by default. set useRadians to True to use radians). phi, theta give spherical coordiante angles of the planewave k-vector. File in more later.
-        :param polS: amplitude, phase (in degrees, set useRadians to True to use radians) of the s-polarization
-        :param polP: amplitude, phase (in degrees, set useRadians to True to use radians) of the p-polarization
+        :param angle: (phi, theta) Angles (in degrees by default. set use_radians to True to use radians). phi, theta give spherical coordiante angles of the planewave k-vector. File in more later.
+        :param pol_s: amplitude, phase (in degrees, set use_radians to True to use radians) of the s-polarization
+        :param pol_p: amplitude, phase (in degrees, set use_radians to True to use radians) of the p-polarization
         :param order: An optional positive integer specifying which order (mode index) to excite. Defaults to 1.
-        :param useRadians: set to True to input angles, phases in radians rather than the default degrees
+        :param use_radians: set to True to input angles, phases in radians rather than the default degrees
         :type angle: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type polS: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type polP: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type pol_s: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type pol_p: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
         :type order: int
-        :type useRadians: bool
+        :type use_radians: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         # check types
-        lAngle = np.asarray(angle)
-        if not lAngle.ndim == 1:
+        l_angle = np.asarray(angle)
+        if not l_angle.ndim == 1:
             raise RuntimeError("Angle must be a vector (1D array)")
-        if not lAngle.shape[0] == 2:
+        if not l_angle.shape[0] == 2:
             raise RuntimeError("Angle must be a 2 element vector (phi, theta)")
-        lAngle = np.require(lAngle, dtype=np.float64, requirements=["C"])
+        l_angle = np.require(l_angle, dtype=np.float64, requirements=["C"])
 
-        lPolS = np.asarray(polS)
-        if not lPolS.ndim == 1:
-            raise RuntimeError("polS must be a vector (1D array)")
-        if not lPolS.shape[0] == 2:
-            raise RuntimeError("polS must be a 2 element vector (amplitude, phase)")
-        lPolS = np.require(lPolS, dtype=np.float64, requirements=["C"])
+        l_pol_s = np.asarray(pol_s)
+        if not l_pol_s.ndim == 1:
+            raise RuntimeError("pol_s must be a vector (1D array)")
+        if not l_pol_s.shape[0] == 2:
+            raise RuntimeError("pol_s must be a 2 element vector (amplitude, phase)")
+        l_pol_s = np.require(l_pol_s, dtype=np.float64, requirements=["C"])
 
-        lPolP = np.asarray(polP)
-        if not lPolP.ndim == 1:
-            raise RuntimeError("polP must be a vector (1D array)")
-        if not lPolP.shape[0] == 2:
-            raise RuntimeError("polP must be a 2 element vector (amplitude, phase)")
-        lPolP = np.require(lPolP, dtype=np.float64, requirements=["C"])
+        l_pol_p = np.asarray(pol_p)
+        if not l_pol_p.ndim == 1:
+            raise RuntimeError("pol_p must be a vector (1D array)")
+        if not l_pol_p.shape[0] == 2:
+            raise RuntimeError("pol_p must be a 2 element vector (amplitude, phase)")
+        l_pol_p = np.require(l_pol_p, dtype=np.float64, requirements=["C"])
 
-        lOrder = order
+        l_order = order
         if not isinstance(order, int):
             print("input order is not an int. Casting to int")
-            lOrder = int(order)
-            print("using a value of order = {}".format(lOrder))
-        if lOrder < 1:
+            l_order = int(order)
+            print("using a value of order = {}".format(l_order))
+        if l_order < 1:
             raise RuntimeError("order must be <= 1")
 
         # convert to radians as required
-        if not useRadians:
+        if not use_radians:
             # convert phi, theta
-            lAngle[0] *= (np.pi/180.0)
-            lAngle[1] *= (np.pi/180.0)
+            l_angle[0] *= (np.pi/180.0)
+            l_angle[1] *= (np.pi/180.0)
             # convert the polarization
-            lPolS[1] *= (np.pi/180.0)
-            lPolP[1] *= (np.pi/180.0)
+            l_pol_s[1] *= (np.pi/180.0)
+            l_pol_p[1] *= (np.pi/180.0)
 
         # call the C++ function
-        self._S4Sim._SetExcitationPlaneWave(lAngle, lPolS, lPolP, lOrder)
+        self._S4Sim._SetExcitationPlaneWave(l_angle, l_pol_s, l_pol_p, l_order)
 
-    def SetFrequency(self, freqR, freqI=0.0):
+    def set_frequency(self, freq_r, freq_i=0.0):
         """
         Set the operating frequency of the system (and excitation)
 
-        :param freqR: The real frequency. This is not the angular frequency (2*:math:`\pi`*freqR)
-        :param freqI: The imaginary frequency of the system. Typically not specified and defaults to zero. If specified, must be negative
+        :param freq_r: The real frequency. This is not the angular frequency (2*:math:`\pi`*freq_r)
+        :param freq_i: The imaginary frequency of the system. Typically not specified and defaults to zero. If specified, must be negative
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lFreqR = freqR
-        if not isinstance(freqR, float):
-            print("freqR is not a float. Casting to float")
-            lFreqR = float(lFreqR)
-            print("using a value of freqR = {}".format(lFreqR))
-        if not freqI <= 0:
-            raise RuntimeError("freqI must be <= 0")
-        lFreqI = freqI
-        if not isinstance(freqI, float):
-            print("freqI is not a float. Casting to float")
-            lFreqI = float(lFreqI)
-            print("using a value of freqI = {}".format(lFreqI))
-        self._S4Sim._SetFrequency(lFreqR, lFreqI)
+        l_freq_r = freq_r
+        if not isinstance(freq_r, float):
+            print("freq_r is not a float. Casting to float")
+            l_freq_r = float(l_freq_r)
+            print("using a value of freq_r = {}".format(l_freq_r))
+        if not freq_i <= 0:
+            raise RuntimeError("freq_i must be <= 0")
+        l_freq_i = freq_i
+        if not isinstance(freq_i, float):
+            print("freq_i is not a float. Casting to float")
+            l_freq_i = float(l_freq_i)
+            print("using a value of freq_i = {}".format(l_freq_i))
+        self._S4Sim._SetFrequency(l_freq_r, l_freq_i)
 
     # Settings for Fourier Modal Methods
 
-    def UseDiscretizedEpsilon(self, use=True):
+    def use_discretized_epsilon(self, use=True):
         """
         Enables or disables the use of discretization in generating the Fourier
         coefficients of the in-plane epsilon profiles, instead of using values
@@ -385,17 +430,17 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
-        self._S4Sim._UseDiscretizedEpsilon(lUse)
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
+        self._S4Sim._UseDiscretizedEpsilon(l_use)
 
 
-    def UseSubpixelSmoothing(self, use=True):
+    def use_subpixel_smoothing(self, use=True):
         """Enables or disables the use of second-order accurate epsilon averaging
         rules within a pixel. The average epsilon within a pixel is computed
         using the fill factor of each material and the interface direction.
@@ -403,16 +448,16 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
-        self._S4Sim._UseSubpixelSmoothing(lUse)
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
+        self._S4Sim._UseSubpixelSmoothing(l_use)
 
-    def UseLanczosSmoothing(self, use=True):
+    def use_lanczos_smoothing(self, use=True):
         """
         Enables of disables smoothing of the Fourier series representations of
         the layer dielectric constants using the Lanczos sigma factor (box filtering).
@@ -421,16 +466,16 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
-        self._S4Sim._UseLanczosSmoothing(lUse)
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
+        self._S4Sim._UseLanczosSmoothing(l_use)
 
-    def UsePolarizationDecomposition(self, use=True):
+    def use_polarization_decomposition(self, use=True):
         """
         Enables of disables the use of proper in-plane Fourier factorization
         rules by decomposing fields into a polarization basis which conforms
@@ -442,16 +487,16 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
-        self._S4Sim._UsePolarizationDecomposition(lUse)
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
+        self._S4Sim._UsePolarizationDecomposition(l_use)
 
-    def UseJonesVectorBasis(self, use=True):
+    def use_jones_vector_basis(self, use=True):
         """
         This option only has an effect with UsePolarizationDecomposition().
         When enabled, a Jones bector basis field is used intead of a conformal
@@ -461,17 +506,17 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
 
-        self._S4Sim._UseJonesVectorBasis(lUse)
+        self._S4Sim._UseJonesVectorBasis(l_use)
 
-    def UseNormalVectorBasis(self, use=True):
+    def use_normal_vector_basis(self, use=True):
         """
         This option only has an effect with UsePolarizationDecomposition().
         When enabled, the resulting vector field is normalized. Where the
@@ -482,32 +527,32 @@ class Simulation:
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
 
-        self._S4Sim._UseNormalVectorBasis(lUse)
+        self._S4Sim._UseNormalVectorBasis(l_use)
 
-    def UseExperimentalFMM(self, use=True):
+    def use_experimental_FMM(self, use=True):
         """
         :param use: set to True to enable
         :type use: bool
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lUse = use
+        l_use = use
         if not isinstance(use, bool):
             print("use is not of type bool; attempting to cast")
-            lUse = bool(use)
-            print("using value for use = {}".format(lUse))
+            l_use = bool(use)
+            print("using value for use = {}".format(l_use))
 
-        self._S4Sim._UseExperimentalFMM(lUse)
+        self._S4Sim._UseExperimentalFMM(l_use)
 
-    def SetResolution(self, resolution=8):
+    def set_resolution(self, resolution=8):
         """
         Set the resolution of the system. Lots of notes here.
 
@@ -515,23 +560,23 @@ class Simulation:
         (must be 2 to satisfy the Nyquist limit)
         :type resolution: int
         """
-        self._checkForSim()
+        self._check_for_sim()
 
-        lRes = resolution
+        l_resolution = resolution
         if not isinstance(resolution, int):
             print("resolution is not an integer; attempting to cast")
-            lRes = int(resolution)
+            l_resolution = int(resolution)
             print("using a value of resolution = {}".format(resolution))
-        self._S4Sim._SetResolution(lRes)
+        self._S4Sim._SetResolution(l_resolution)
 
-    def TestArray(self):
+    def test_array(self):
         """
         """
-        self._checkForSim()
+        self._check_for_sim()
         x = self._S4Sim._TestArray()
         print(x)
 
-    def GetPoyntingFlux(self, layer, offset=0.0):
+    def get_poynting_flux(self, layer, offset=0.0):
         """
         Get the Poynting Flux
 
@@ -547,18 +592,18 @@ class Simulation:
         TODO: fix issue with (print(S.GetPoyntingFlux(<layer>))) that
         results in a malloc error; may be alright. Be on the lookout
         """
-        self._checkForSim()
+        self._check_for_sim()
 
         if not isinstance(layer, str):
             raise RuntimeError("Layer must be a string")
-        lLayer = layer
+        l_layer = layer
 
-        lOffset = offset
+        l_offset = offset
         if not isinstance(offset, float):
             print("offset should be a float; attempting to cast")
-            lOffset = float(offset)
-            print("using a value of offset = {}".format(lOffset))
+            l_offset = float(offset)
+            print("using a value of offset = {}".format(l_offset))
 
         # get the data
-        powerFlux = self._S4Sim._GetPoyntingFlux(lLayer, lOffset)
+        powerFlux = self._S4Sim._GetPoyntingFlux(l_layer, l_offset)
         return powerFlux

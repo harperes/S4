@@ -35,7 +35,6 @@ class PySimulation
     public:
     PySimulation();
     ~PySimulation();
-    // I dont' know what I should call this...
     void CreateNew();
     struct EPSData
         {
@@ -43,7 +42,6 @@ class PySimulation
         int type;
         };
     // these need the proper arguments included
-    /* void AddMaterial(); */
     EPSData SetEPS(py::array_t<double> pyEPS);
     void AddMaterial(std::string pyName, py::array_t<double> pyEPS);
     void SetMaterial(std::string pyName, py::array_t<double> pyEPS);
@@ -54,6 +52,7 @@ class PySimulation
     void SetLayer(std::string pyName, double pyThickness, std::string pyBackground);
     void SetLayerThickness(std::string pyName, double pyThickness);
     void SetLayerPatternCircle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyRadius);
+    void SetLayerPatternPolygon(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, py::array_t<double> pyVertices, double pyAngle);
     void SetExcitationPlaneWave(py::array_t<double> pyAngle, py::array_t<double> pyPolS, py::array_t<double> pyPolP, int pyOrder);
     void SetFrequency(double pyFreqr, double pyFreqi);
     // Fourier Modal Methods Settings
