@@ -112,12 +112,12 @@ class Simulation:
 
         # make sure the l_bv is correctly sized
         # this may get a bit tricky
-        l_bv = np.asarray(basis_vectors)
+        l_bv = np.asarray(basis_vectors, dtype=np.float64)
         if l_bv.ndim not in [0, 2]:
             raise RuntimeError("basis vectors must be a either a single number for a 1D lattice, or 2-Dimensional array for a 2D lattice")
         if l_bv.ndim == 0:
             # fix to avoid issues in C++
-            l_bv = np.array([basis_vectors])
+            l_bv = np.array([basis_vectors], dtype=np.float64)
         else:
             if not ((l_bv.shape[0] == 2) and (l_bv.shape[1] == 2)):
                 raise RuntimeError("l_bv must be a 2x2 array")
@@ -254,7 +254,7 @@ class Simulation:
 
     def set_layer_pattern_circle(self, name, material, center, radius):
         """
-        Adds a filled circle of a specified material to an existing non-coy layer.
+        Adds a filled circle of a specified material to an existing non-copy layer.
 
         The circle should not intersect any other patterning shapes, but may contain
         or be contained within other shapes.
@@ -293,8 +293,85 @@ class Simulation:
             raise RuntimeError("raidus must be positive")
         self._S4Sim._SetLayerPatternCircle(l_name, l_material, l_center, l_radius)
 
+    def set_layer_pattern_rectangle(self, name, material, center, halfwidths, angle=0.0, use_radians=False):
+        """
+        Adds a filled polygon of a specified material to an existing non-copy layer.
+
+        The polygon should not intersect any other patterning shapes, but may contain
+        or be contained within other shapes.
+
+        Note: If you are using a 1D lattice, make sure to set both center[1] and half\
+              widths[1] to 0.
+
+        :param name: name of layer
+        :param material: material circle is made of
+        :param center: vector specifying the coordinate of the center of the circle
+        :param halfwidths: halfwidths of the rectangle, (x, y), for unrotated rectangle
+        :param angle: angle by which to rotate the shape. Uses degrees unless `use_radians=True`
+        :param use_radians: set to `True` to use radians rather than degrees
+        :type name: str
+        :type material: str
+        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type halfwidths: :class:`numpy.ndarray`, shape=(n,), dtype=:class:`numpy.float`
+        :type angle: float
+        :type use_radians: bool
+        """
+
+        self._check_for_sim()
+
+        # type checks
+        if not isinstance(name, str):
+            raise RuntimeError("name must be a str")
+        else:
+            l_name = name
+        if not isinstance(material, str):
+            raise RuntimeError("material must be a str")
+        else:
+            l_material = material
+        l_center = np.asarray(center)
+        if not l_center.ndim == 1:
+            raise RuntimeError("Center must be a vector (1D array)")
+        if not l_center.shape[0] == 2:
+            raise RuntimeError("Center must be a 2 element vector (x, y)")
+        l_halfwidths = np.asarray(halfwidths)
+        if not l_halfwidths.ndim == 1:
+            raise RuntimeError("halfwidths must be a 1D array")
+        if not l_halfwidths.shape[0] == 2:
+            raise RuntimeError("halfwidths must be an array of [x, y]")
+
+        # there is something strange going on with the ability to rotate the polygon
+        # main_lua.c has `S4_real angle = luaL_checknumber(L, 5) / 360.;` implying
+        # that somehow the input angle is divided into a fraction of a full rotation
+        # rather than something like radians
+        # It is an angle fraction, so we will handle here, not buried in C++
+        l_angle = angle
+        if use_radians:
+            l_angle /= (np.pi / 2.0)
+        else:
+            l_angle /= 360.0
+
+        self._S4Sim._SetLayerPatternRectangle(l_name, l_material, l_center, l_angle, l_halfwidths)
+
     def set_layer_pattern_polygon(self, name, material, center, vertices, angle=0.0, use_radians=False):
         """
+        Adds a filled polygon of a specified material to an existing non-copy layer.
+
+        The polygon should not intersect any other patterning shapes, but may contain
+        or be contained within other shapes.
+
+        :param name: name of layer
+        :param material: material circle is made of
+        :param center: vector specifying the coordinate of the center of the circle
+        :param vertices: vertices of the polygon. Must be entered in CCW order. NOTE: \
+                         It is unclear if the vertices are shifted by the center or not.
+        :param angle: angle by which to rotate the shape. Uses degrees unless `use_radians=True`
+        :param use_radians: set to `True` to use radians rather than degrees
+        :type name: str
+        :type material: str
+        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type vertices: :class:`numpy.ndarray`, shape=(n,2), dtype=:class:`numpy.float`
+        :type angle: float
+        :type use_radians: bool
         """
 
         self._check_for_sim()

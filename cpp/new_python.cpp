@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
+#include <iostream>
 
 namespace py = pybind11;
 
@@ -237,6 +238,10 @@ void PySimulation::SetLattice(py::array_t<double> pyLattice)
     {
     // set the lattice basis vectors
     S4_real Lr[4];
+    for (size_t i=0; i<4; ++i)
+        {
+        Lr[i] = 0;
+        }
     // get the information about the incoming numpy array
     py::buffer_info info = pyLattice.request();
     double *ptr = static_cast<double *>(info.ptr);
@@ -437,6 +442,68 @@ void PySimulation::SetLayerPatternCircle(std::string pyName, std::string pyMater
         s << "SetLayerPatternCircle: There was a problem allocating the pattern.";
         throw std::runtime_error(s.str());
         }
+    }
+
+void PySimulation::SetLayerPatternRectangle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyAngle, py::array_t<double> pyWidths)
+    {
+    const char *layer_name = pyName.c_str();
+    const char *material_name = pyMaterial.c_str();
+    double center[2], halfwidths[2];
+    S4_LayerID layer;
+    S4_MaterialID M;
+    S4_real angle = pyAngle;
+    // process the center
+    py::buffer_info center_info = pyCenter.request();
+    double *center_ptr = static_cast<double *>(center_info.ptr);
+    // process the halfwidths
+    py::buffer_info halfwidth_info = pyWidths.request();
+    double *halfwidth_ptr = static_cast<double *>(halfwidth_info.ptr);
+
+    layer = S4_Simulation_GetLayerByName(S, layer_name);
+
+    if (layer < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternRectangle: Layer " << layer_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    if (S4_Layer_IsCopy(S, layer) > 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternRectangle: Cannot pattern a layer copy.";
+        throw std::runtime_error(s.str());
+        }
+    M = S4_Simulation_GetMaterialByName(S, material_name);
+    if (M < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternRectangle: Material named " << material_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    center[0] = center_ptr[0];
+    center[1] = center_ptr[1];
+
+    halfwidths[0] = halfwidth_ptr[0];
+    halfwidths[1] = halfwidth_ptr[1];
+
+    int ret;
+    if ((center[1] == 0) and (halfwidths[1] == 0))
+        {
+        ret = S4_Layer_SetRegionHalfwidths(S, layer, M, S4_REGION_TYPE_INTERVAL, halfwidths, center, &angle);
+        }
+    else
+        {
+        ret = S4_Layer_SetRegionHalfwidths(S, layer, M, S4_REGION_TYPE_RECTANGLE, halfwidths, center, &angle);
+        }
+
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "Error Code: " << ret << std::endl;
+        s << "SetLayerPatternRectangle: There was a problem allocating the pattern.";
+        throw std::runtime_error(s.str());
+        }
+
     }
 
 void PySimulation::SetLayerPatternPolygon(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, py::array_t<double> pyVertices, double pyAngle)
@@ -721,6 +788,7 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetLayer", &PySimulation::SetLayer)
         .def("_SetLayerThickness", &PySimulation::SetLayerThickness)
         .def("_SetLayerPatternCircle", &PySimulation::SetLayerPatternCircle)
+        .def("_SetLayerPatternRectangle", &PySimulation::SetLayerPatternRectangle)
         .def("_SetLayerPatternPolygon", &PySimulation::SetLayerPatternPolygon)
         .def("_SetExcitationPlaneWave", &PySimulation::SetExcitationPlaneWave)
         .def("_SetFrequency", &PySimulation::SetFrequency)

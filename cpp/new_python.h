@@ -52,6 +52,7 @@ class PySimulation
     void SetLayer(std::string pyName, double pyThickness, std::string pyBackground);
     void SetLayerThickness(std::string pyName, double pyThickness);
     void SetLayerPatternCircle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyRadius);
+    void SetLayerPatternRectangle(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyAngle, py::array_t<double> pyWidths);
     void SetLayerPatternPolygon(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, py::array_t<double> pyVertices, double pyAngle);
     void SetExcitationPlaneWave(py::array_t<double> pyAngle, py::array_t<double> pyPolS, py::array_t<double> pyPolP, int pyOrder);
     void SetFrequency(double pyFreqr, double pyFreqi);
