@@ -386,15 +386,21 @@ class Simulation:
         else:
             l_material = material
         l_center = np.asarray(center)
-        if not l_center.ndim == 1:
+        if l_center.ndim != 1:
             raise RuntimeError("Center must be a vector (1D array)")
-        if not l_center.shape[0] == 2:
+        if l_center.shape[0] != 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
         l_vertices = np.asarray(vertices)
-        if not l_vertices.ndim == 2:
+        if l_vertices.ndim != 2:
             raise RuntimeError("vertices must be a list of vectors (2D array)")
-        if not l_vertices.shape[1] == 2:
+        if l_vertices.shape[1] != 2:
             raise RuntimeError("each vertex must be a 2 element vector (x, y)")
+        # check for CCW
+        cverts = np.append(l_vertices, [l_vertices[0]], axis=0)
+        cross = np.sum(np.multiply(cverts[:-1,0], cverts[1:,1]) \
+                       - np.multiply(cverts[1:,0], cverts[:-1,1]))
+        if cross < 0:
+            raise RuntimeError("vertices must be entered in counter-clockwise order")
         num_vertices = l_vertices.shape[0]
 
         # there is something strange going on with the ability to rotate the polygon
