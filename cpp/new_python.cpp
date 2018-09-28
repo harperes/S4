@@ -753,7 +753,7 @@ py::array_t<double> PySimulation::GetPoyntingFlux(std::string pyLayer, double py
     if (layer < 0)
         {
         std::ostringstream s;
-        s << "S4_Layer named " << layer << " not found";
+        s << "S4_Layer named " << pyLayer.c_str() << " not found";
         throw std::runtime_error(s.str());
         }
     int ret = S4_Simulation_GetPowerFlux(S, layer, &offset, power);
