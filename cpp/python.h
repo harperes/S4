@@ -1,5 +1,5 @@
-#ifndef NEW_PYTHON_H
-#define NEW_PYTHON_H
+#ifndef PYTHON_H
+#define PYTHON_H
 
 #include <pybind11/pybind11.h>
 

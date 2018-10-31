@@ -4,7 +4,7 @@
 
 namespace py = pybind11;
 
-#include "new_python.h"
+#include "python.h"
 
 #ifdef HAVE_MPI
 #include <mpi.h>

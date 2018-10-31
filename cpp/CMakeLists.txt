@@ -58,15 +58,15 @@ set_source_files_properties(${SOURCES} PROPERTIES COMPILE_DEFINITIONS NO_IMPORT_
 # target_link_libraries(luaS4 ${LUA_LIBRARIES} ${vecLib_LINKER_LIBS} ${FFTW3_LIB})
 
 # this is already done
-add_library(testS4 SHARED ${SOURCES})
+add_library(S4 SHARED ${SOURCES})
 # target_link_libraries(testS4 ${vecLib_LINKER_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} ${BLAS_LIBRARIES} ${LAPACK_LIBRARIES})
-target_link_libraries(testS4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
-pybind11_add_module(_S4 ${CMAKE_CURRENT_SOURCE_DIR}/new_python.cpp)
-target_link_libraries(_S4 PRIVATE testS4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} )
+target_link_libraries(S4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY})
+pybind11_add_module(_S4 ${CMAKE_CURRENT_SOURCE_DIR}/python.cpp)
+target_link_libraries(_S4 PRIVATE S4 ${LINALG_LIBS} ${FFTW3_LIB} ${MPI_LIBRARY} )
 
 
 # I need to fix this since this apparently isn't correct...
-INSTALL(TARGETS testS4
+INSTALL(TARGETS S4
   LIBRARY DESTINATION ${PYTHON_MODULE_BASE_DIR}
   )
 INSTALL(TARGETS _S4
@@ -77,7 +77,7 @@ INSTALL(TARGETS _S4
 if (APPLE)
   add_custom_command(TARGET _S4
     POST_BUILD COMMAND
-    ${CMAKE_INSTALL_NAME_TOOL} -change "${CMAKE_CURRENT_BINARY_DIR}/libtestS4.dylib" "${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_BASE_DIR}/libtestS4.dylib" $<TARGET_FILE:_S4>)
+    ${CMAKE_INSTALL_NAME_TOOL} -change "${CMAKE_CURRENT_BINARY_DIR}/libS4.dylib" "${CMAKE_INSTALL_PREFIX}/${PYTHON_MODULE_BASE_DIR}/libS4.dylib" $<TARGET_FILE:_S4>)
 endif(APPLE)
 
 MACRO(copy_file file)

@@ -33,7 +33,7 @@ include(S4PythonSetup)
 include_directories(${PYTHON_INCLUDE_DIR})
 
 # I should eventually add pybind11 as a submodule
-find_package(pybind11)
+find_package(pybind11 CONFIG REQUIRED)
 
 # setup numpy
 include (S4NumpySetup)

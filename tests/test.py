@@ -33,4 +33,8 @@ class TestSetMethods(unittest.TestCase):
         self.S.add_material(mat_name, nk)
         self.S.add_layer("polygon", 5.0, "vacuum")
         verts = [[0.5, 0.5], [-0.5, 0.5], [-0.5, -0.5], [0.5, -0.5]]
-        self.S.set_layer_pattern_polygon("polygon", "test_material", [0.0, 0.0], verts, angle=0.0)
+        self.S.set_layer_pattern_polygon("polygon",
+                                         "test_material",
+                                         [0.0, 0.0],
+                                         verts,
+                                         angle=0.0)
