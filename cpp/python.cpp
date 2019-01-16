@@ -506,6 +506,61 @@ void PySimulation::SetLayerPatternRectangle(std::string pyName, std::string pyMa
 
     }
 
+void PySimulation::SetLayerPatternEllipse(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, double pyAngle, py::array_t<double> pyWidths)
+    {
+    const char *layer_name = pyName.c_str();
+    const char *material_name = pyMaterial.c_str();
+    double center[2], halfwidths[2];
+    S4_LayerID layer;
+    S4_MaterialID M;
+    S4_real angle = pyAngle;
+    // process the center
+    py::buffer_info center_info = pyCenter.request();
+    double *center_ptr = static_cast<double *>(center_info.ptr);
+    // process the halfwidths
+    py::buffer_info halfwidth_info = pyWidths.request();
+    double *halfwidth_ptr = static_cast<double *>(halfwidth_info.ptr);
+
+    layer = S4_Simulation_GetLayerByName(S, layer_name);
+
+    if (layer < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternEllipse: Layer " << layer_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    if (S4_Layer_IsCopy(S, layer) > 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternEllipse: Cannot pattern a layer copy.";
+        throw std::runtime_error(s.str());
+        }
+    M = S4_Simulation_GetMaterialByName(S, material_name);
+    if (M < 0)
+        {
+        std::ostringstream s;
+        s << "SetLayerPatternEllipse: Material named " << material_name << " not found";
+        throw std::runtime_error(s.str());
+        }
+    center[0] = center_ptr[0];
+    center[1] = center_ptr[1];
+
+    halfwidths[0] = halfwidth_ptr[0];
+    halfwidths[1] = halfwidth_ptr[1];
+
+    int ret;
+    ret = S4_Layer_SetRegionHalfwidths(S, layer, M, S4_REGION_TYPE_ELLIPSE, halfwidths, center, &angle);
+
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "Error Code: " << ret << std::endl;
+        s << "SetLayerPatternEllipse: There was a problem allocating the pattern.";
+        throw std::runtime_error(s.str());
+        }
+
+    }
+
 void PySimulation::SetLayerPatternPolygon(std::string pyName, std::string pyMaterial, py::array_t<double> pyCenter, py::array_t<double> pyVertices, double pyAngle)
     {
     const char *layer_name = pyName.c_str();
@@ -532,20 +587,20 @@ void PySimulation::SetLayerPatternPolygon(std::string pyName, std::string pyMate
     if (layer < 0)
         {
         std::ostringstream s;
-        s << "SetLayerPatternCircle: Layer " << layer_name << " not found";
+        s << "SetLayerPatternPolygon: Layer " << layer_name << " not found";
         throw std::runtime_error(s.str());
         }
     if (S4_Layer_IsCopy(S, layer) > 0)
         {
         std::ostringstream s;
-        s << "SetLayerPatternCircle: Cannot pattern a layer copy.";
+        s << "SetLayerPatternPolygon: Cannot pattern a layer copy.";
         throw std::runtime_error(s.str());
         }
     M = S4_Simulation_GetMaterialByName(S, material_name);
     if (M < 0)
         {
         std::ostringstream s;
-        s << "SetLayerPatternCircle: Material named " << material_name << " not found";
+        s << "SetLayerPatternPolygon: Material named " << material_name << " not found";
         throw std::runtime_error(s.str());
         }
     center[0] = center_ptr[0];
@@ -788,6 +843,7 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetLayer", &PySimulation::SetLayer)
         .def("_SetLayerThickness", &PySimulation::SetLayerThickness)
         .def("_SetLayerPatternCircle", &PySimulation::SetLayerPatternCircle)
+        .def("_SetLayerPatternEllipse", &PySimulation::SetLayerPatternEllipse)
         .def("_SetLayerPatternRectangle", &PySimulation::SetLayerPatternRectangle)
         .def("_SetLayerPatternPolygon", &PySimulation::SetLayerPatternPolygon)
         .def("_SetExcitationPlaneWave", &PySimulation::SetExcitationPlaneWave)
