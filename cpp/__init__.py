@@ -1,4 +1,5 @@
 # from ._S4 import S4_Simulation
+__version__ = "1.1.2"
 from ._S4 import S4_Simulation as _S4Sim
 import numpy as np
 # from . import S4
