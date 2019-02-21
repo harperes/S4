@@ -1,6 +1,9 @@
 Developer Info
 ==============
 
+The below is legacy information for developers. This will be kept for reference as deemed necessary
+and will be updated as needed.
+
 Dependencies
 ------------
 
@@ -86,7 +89,7 @@ Coding conventions
 
 The code is mostly C-styled C++. The need to use C++ is mainly for the complex number type. There should never be non-trivial objects (only Plain Old Data structs), and certainly no inheritance, polymorphism, or templates (except in RNP).
 
-Indentation should be 4 spaces per tab. Always use tabs instead of spaces. The actual tab width should never matter for readability, meaning tabs can only exist contiguously starting from the left-most column, and comment blocks should never sit at the end of lines of code. Lines should be kept to around 72 or 80 characters in length if possible, especially for comment blocks.
+Indentation should be 4 spaces per tab. Always use **spaces** instead of **tabs**. The actual tab width should never matter for readability, meaning tabs can only exist contiguously starting from the left-most column, and comment blocks should never sit at the end of lines of code. Lines should be kept to around 72 or 80 characters in length if possible, especially for comment blocks.
 
 Functions generally are in Lapack-style, where there are a large number of well defined inputs, and a number of outputs returned by pointers. Functions return an integer code, with negative values corresponding to invalid parameters. When appropriate, workspaces can be passed in to reduce the number of dynamic allocations. Also, when convenient, workspace querying should be supported.
 

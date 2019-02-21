@@ -29,12 +29,15 @@ import os
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-	'sphinx.ext.autodoc',
-	'sphinx.ext.autosummary',
-	'sphinx.ext.todo',
-	'sphinx.ext.pngmath',
-	'sphinxcontrib.fulltoc',
-	'redjack.sphinx.lua'
+    'sphinx.ext.autodoc',
+    'sphinx.ext.autosummary',
+    'sphinx.ext.todo',
+    'sphinx.ext.mathjax',
+    'sphinx.ext.intersphinx',
+    'nbsphinx',
+    'IPython.sphinxext.ipython_console_highlighting',
+#    'sphinxcontrib.fulltoc',
+ #   'redjack.sphinx.lua'
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -111,18 +114,18 @@ html_theme = 'default'
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-	'stickysidebar': 'true',
-	'footerbgcolor': '#ddd', # Background color for the footer line.
-	'footertextcolor': '#333', # Text color for the footer line.
-	'sidebarbgcolor': '#ddd', # Background color for the sidebar.
-	#'sidebarbtncolor': '#0f0', # Background color for the sidebar collapse button (used when collapsiblesidebar is true).
-	'sidebartextcolor': '#333', # Text color for the sidebar.
-	'sidebarlinkcolor': '#33d', # Link color for the sidebar.
-	'relbarbgcolor': '#666', # Background color for the relation bar.
-	#'relbartextcolor': '#f00', # Text color for the relation bar.
-	#'relbarlinkcolor': '#00f', # Link color for the relation bar.
-	'bgcolor': '#fff', # Body background color.
-	'textcolor': '#000', # Body text color.
+    'stickysidebar': 'true',
+    'footerbgcolor': '#ddd', # Background color for the footer line.
+    'footertextcolor': '#333', # Text color for the footer line.
+    'sidebarbgcolor': '#ddd', # Background color for the sidebar.
+    #'sidebarbtncolor': '#0f0', # Background color for the sidebar collapse button (used when collapsiblesidebar is true).
+    'sidebartextcolor': '#333', # Text color for the sidebar.
+    'sidebarlinkcolor': '#33d', # Link color for the sidebar.
+    'relbarbgcolor': '#666', # Background color for the relation bar.
+    #'relbartextcolor': '#f00', # Text color for the relation bar.
+    #'relbarlinkcolor': '#00f', # Link color for the relation bar.
+    'bgcolor': '#fff', # Body background color.
+    'textcolor': '#000', # Body text color.
 #	linkcolor (CSS color): Body link color.
 #	visitedlinkcolor (CSS color): Body color for visited links.
 #	headbgcolor (CSS color): Background color for headings.
@@ -283,3 +286,5 @@ texinfo_documents = [
 
 # If true, do not generate a @detailmenu in the "Top" node's menu.
 #texinfo_no_detailmenu = False
+
+todo_include_todos = True

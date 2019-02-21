@@ -62,9 +62,9 @@ class Simulation:
 
         :param name: name of the material
         :param eps: epsilon value of the material
-        :type name: :class:`str`
-        :type eps: :class:`numpy.ndarray`, shape=(:math:1 OR :math:2 OR math:9 OR math:3x3),
-        dtype=:class:`numpy.float`
+        :type name: str
+        :type eps: :class:`numpy.ndarray`, shape=(:math:`1` OR :math:`2` OR
+                   :math:`9` OR :math:`3 \\times 3`), dtype=float
         """
         # check to make sure a simulation exists
         self._check_for_sim()
@@ -84,9 +84,9 @@ class Simulation:
 
         :param name: name of the material
         :param eps: epsilon value of the material
-        :type name: :class:`str`
-        :type eps: :class:`numpy.ndarray`, shape=(:math:1 OR :math:2 OR math:9 OR math:3x3),
-        dtype=:class:`numpy.float`
+        :type name: str
+        :type eps: :class:`numpy.ndarray`, shape=(:math:`1` OR :math:`2` OR
+                   :math:`9` OR :math:`3\\times3`), dtype=float
         """
         # check to make sure a simulation exists
         self._check_for_sim()
@@ -105,7 +105,9 @@ class Simulation:
         Set the basis vectors for a simulation
 
         :param basis_vectors: pair of vectors specifying the lattice basic vectors
-        :type basis_vectors: :class:`numpy.ndarray`, shape=(:math:`left(2,2)`, dtype=:class:`numpy.float`)
+        :type basis_vectors: :class:`numpy.ndarray`,
+                             shape= :math:`\\left( 2, 2 \\right)`,
+                             dtype=float
         """
         # check to make sure a simulation exists
         self._check_for_sim()
@@ -265,7 +267,9 @@ class Simulation:
         :param radius: radius of circle
         :type name: str
         :type material: str
-        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :type center: :class:`numpy.ndarray`,
+                      shape= :math:`\\left( 2, \\right)`,
+                      dtype=float
         """
         self._check_for_sim()
 
@@ -293,26 +297,31 @@ class Simulation:
             raise RuntimeError("raidus must be positive")
         self._S4Sim._SetLayerPatternCircle(l_name, l_material, l_center, l_radius)
 
-    def set_layer_pattern_ellipse(self, name, material, center, halfwidths, angle=0.0, use_radians=False):
+    def set_layer_pattern_ellipse(self, name, material, center, halfwidths,
+                                  angle=0.0, use_radians=False):
         """
         Adds a filled ellipse of a specified material to an existing non-copy layer.
 
         The ellipse should not intersect any other patterning shapes, but may contain
         or be contained within other shapes.
 
-        Note: If you are using a 1D lattice, make sure to set both center[1] and half\
-              widths[1] to 0.
+        Note: If you are using a 1D lattice, make sure to set both center[1]
+              and halfwidths[1] to 0.
 
         :param name: name of layer
         :param material: material circle is made of
         :param center: vector specifying the coordinate of the center of the circle
-        :param halfwidths: halfwidths of the ellipse, (x, y), for unrotated ellipse
-        :param angle: angle by which to rotate the shape. Uses degrees unless `use_radians=True`
+        :param halfwidths: halfwidths of the ellipse,
+                           :math:`\\left(x, y\\right)`, for unrotated ellipse
+        :param angle: angle by which to rotate the shape. Uses degrees unless
+                      `use_radians=True`
         :param use_radians: set to `True` to use radians rather than degrees
         :type name: str
         :type material: str
-        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type halfwidths: :class:`numpy.ndarray`, shape=(n,), dtype=:class:`numpy.float`
+        :type center: :class:`numpy.ndarray`,
+                      shape= :math:`\\left(2, \\right)`, dtype=float
+        :type halfwidths: :class:`numpy.ndarray`,
+                          shape= :math:`\\left(n, \\right)`, dtype=float
         :type angle: float
         :type use_radians: bool
         """
@@ -359,19 +368,23 @@ class Simulation:
         The rectangle should not intersect any other patterning shapes, but may contain
         or be contained within other shapes.
 
-        Note: If you are using a 1D lattice, make sure to set both center[1] and half\
-              widths[1] to 0.
+        Note: If you are using a 1D lattice, make sure to set both center[1]
+              and halfwidths[1] to 0.
 
         :param name: name of layer
         :param material: material circle is made of
         :param center: vector specifying the coordinate of the center of the circle
-        :param halfwidths: halfwidths of the rectangle, (x, y), for unrotated rectangle
-        :param angle: angle by which to rotate the shape. Uses degrees unless `use_radians=True`
+        :param halfwidths: halfwidths of the rectangle,
+                           :math:`\\left(x,  y \\right)`, for unrotated rectangle
+        :param angle: angle by which to rotate the shape. Uses degrees unless
+                      `use_radians=True`
         :param use_radians: set to `True` to use radians rather than degrees
         :type name: str
         :type material: str
-        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type halfwidths: :class:`numpy.ndarray`, shape=(n,), dtype=:class:`numpy.float`
+        :type center: :class:`numpy.ndarray`,
+                      shape= :math:`\\left(2,\\right)`, dtype=float
+        :type halfwidths: :class:`numpy.ndarray`,
+                          shape= :math:`\\left(n,\\right)`, dtype=float
         :type angle: float
         :type use_radians: bool
         """
@@ -421,16 +434,23 @@ class Simulation:
         :param name: name of layer
         :param material: material circle is made of
         :param center: vector specifying the coordinate of the center of the circle
-        :param vertices: vertices of the polygon. Must be entered in CCW order. NOTE: \
-                         It is unclear if the vertices are shifted by the center or not.
-        :param angle: angle by which to rotate the shape. Uses degrees unless `use_radians=True`
+        :param vertices: vertices of the polygon. Must be entered in CCW order.
+        :param angle: angle by which to rotate the shape. Uses degrees unless
+                      `use_radians=True`
         :param use_radians: set to `True` to use radians rather than degrees
         :type name: str
         :type material: str
-        :type center: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type vertices: :class:`numpy.ndarray`, shape=(n,2), dtype=:class:`numpy.float`
+        :type center: :class:`numpy.ndarray`,
+                      shape= :math:`\\left(2,\\right)`, dtype=float
+        :type vertices: :class:`numpy.ndarray`,
+                        shape= :math:`\\left(n,2\\right)`, dtype=float
         :type angle: float
         :type use_radians: bool
+
+        .. note::
+
+           It is unclear if the vertices are shifted by the center or not.
+           It is assumed that they are.
         """
 
         self._check_for_sim()
@@ -482,16 +502,30 @@ class Simulation:
         incident with the electric field polarized along the x-axis for the
         p-polarization. The phase of each polarization is defined at the origin (z=0)
 
-        :param angle: (phi, theta) Angles (in degrees by default. set use_radians to True to use radians). phi, theta give spherical coordiante angles of the planewave k-vector. File in more later.
-        :param pol_s: amplitude, phase (in degrees, set use_radians to True to use radians) of the s-polarization
-        :param pol_p: amplitude, phase (in degrees, set use_radians to True to use radians) of the p-polarization
-        :param order: An optional positive integer specifying which order (mode index) to excite. Defaults to 1.
-        :param use_radians: set to True to input angles, phases in radians rather than the default degrees
-        :type angle: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type pol_s: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
-        :type pol_p: :class:`numpy.ndarray`, shape=(2,), dtype=:class:`numpy.float`
+        :param angle: :math:`\\left(\\phi, \\theta\\right)` Angles (in degrees
+                      by default. set `use_radians` to `True` to use radians).
+                      :math:`\\phi, \\theta` give spherical coordinate angles
+                      of the planewave k-vector. Fill in more later.
+        :param pol_s: amplitude, phase (in degrees, set `use_radians` to
+                      `True` to use radians) of the s-polarization
+        :param pol_p: amplitude, phase (in degrees, set `use_radians` to
+                      `True` to use radians) of the p-polarization
+        :param order: An optional positive integer specifying which order
+                      (mode index) to excite. Defaults to 1.
+        :param use_radians: set to `True` to input angles, phases in radians
+                            rather than the default degrees
+        :type angle: :class:`numpy.ndarray`, shape= :math:`\\left(2, \\right)`,
+                     dtype=float
+        :type pol_s: :class:`numpy.ndarray`, shape= :math:`\\left(2, \\right)`,
+                     dtype=float
+        :type pol_p: :class:`numpy.ndarray`, shape= :math:`\\left(2, \\right)`,
+                     dtype=float
         :type order: int
         :type use_radians: bool
+
+        .. todo::
+
+           Expand information about :math:`\\theta, \\phi`
         """
         self._check_for_sim()
 
@@ -541,7 +575,8 @@ class Simulation:
         """
         Set the operating frequency of the system (and excitation)
 
-        :param freq_r: The real frequency. This is not the angular frequency (2*:math:`\pi`*freq_r)
+        :param freq_r: The real frequency. This is not the angular frequency
+                       :math:`(2 \\pi \\nu_r)`
         :param freq_i: The imaginary frequency of the system. Typically not specified and defaults to zero. If specified, must be negative
         """
         self._check_for_sim()
@@ -569,7 +604,7 @@ class Simulation:
         from closed-form equations. When enabled, the coefficients are obtained
         by FFT.
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -587,7 +622,7 @@ class Simulation:
         rules within a pixel. The average epsilon within a pixel is computed
         using the fill factor of each material and the interface direction.
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -601,11 +636,12 @@ class Simulation:
 
     def use_lanczos_smoothing(self, use=True):
         """
-        Enables of disables smoothing of the Fourier series representations of
-        the layer dielectric constants using the Lanczos sigma factor (box filtering).
-        This reduces the Gibbs phenomenon ringing in the real space reconstruction.
+        Enables or disables smoothing of the Fourier series representations of
+        the layer dielectric constants using the Lanczos sigma factor
+        (box filtering). This reduces the Gibbs phenomenon ringing in the real
+        space reconstruction.
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -626,7 +662,7 @@ class Simulation:
         everywhere tangent to the layer pattern boundaries. This option is
         not guaranteed to work in the presence of tensor dielectric constants
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -640,12 +676,13 @@ class Simulation:
 
     def use_jones_vector_basis(self, use=True):
         """
-        This option only has an effect with UsePolarizationDecomposition().
+        This option only has an effect with
+        :meth:`S4.Simulation.UsePolarizationDecomposition`.
         When enabled, a Jones bector basis field is used intead of a conformal
         harmonic field. Enabling this feature may improve convergence with
         respect to the number of G-vectors.
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -666,7 +703,7 @@ class Simulation:
         Enabling this feature may improve convergence with respect to the
         number of G-vectors.
 
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -681,7 +718,7 @@ class Simulation:
 
     def use_experimental_FMM(self, use=True):
         """
-        :param use: set to True to enable
+        :param use: set to `True` to enable
         :type use: bool
         """
         self._check_for_sim()
@@ -711,13 +748,6 @@ class Simulation:
             print("using a value of resolution = {}".format(resolution))
         self._S4Sim._SetResolution(l_resolution)
 
-    def test_array(self):
-        """
-        """
-        self._check_for_sim()
-        x = self._S4Sim._TestArray()
-        print(x)
-
     def get_poynting_flux(self, layer, offset=0.0):
         """
         Get the Poynting Flux
@@ -728,11 +758,14 @@ class Simulation:
         :type offset: float
 
         :return: power flux [forward_real, backward_real,
-        forward_imaginary, backward_imaginary]
-        :type: :class:`numpy.ndarray`, shape=(4,), dtype=np.float64
+                 forward_imaginary, backward_imaginary]
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(4, \\right)`,
+               dtype=float
 
-        TODO: fix issue with (print(S.GetPoyntingFlux(<layer>))) that
-        results in a malloc error; may be alright. Be on the lookout
+        .. todo::
+
+           fix issue with (print(S.GetPoyntingFlux(<layer>))) that
+           results in a malloc error; may be alright. Be on the lookout.
         """
         self._check_for_sim()
 

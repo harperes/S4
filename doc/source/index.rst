@@ -12,7 +12,9 @@ What is it?
 |S4| (or simply S4) stands for Stanford Stratified Structure Solver, a frequency domain code to solve the linear Maxwell's equations in layered periodic structures.
 Internally, it uses Rigorous Coupled Wave Analysis (RCWA; also called the Fourier Modal Method (FMM)) and the S-matrix algorithm.
 The program is implemented using a `Lua <http://www.lua.org/>`_ frontend, or alternatively, as a `Python <http://python.org>`_ extension.
-|S4| was developed by `Victor Liu <http://www.stanford.edu/~vkl/>`_ of the `Fan Group <http://www.stanford.edu/group/fan/>`_ in the `Stanford Electrical Engineering Department <http://ee.stanford.edu/>`_.
+|S4| was *originally* developed by `Victor Liu <http://www.stanford.edu/~vkl/>`_ of the `Fan Group <http://www.stanford.edu/group/fan/>`_ in the `Stanford Electrical Engineering Department <http://ee.stanford.edu/>`_. This version of `|S4| <https://github.com/harperes/S4>`_ is under
+active development by `Eric Harper <https://harperic.github.io/>`_ as part of the
+`MANTIS project <https://github.com/harperes/MANTIS>`_ at AFRL.
 
 .. image:: schem_640.png
 
@@ -30,10 +32,9 @@ Documentation Contents
 
 .. toctree::
    :maxdepth: 2
-   
+
    install
    tutorial
-   lua_api
    python_api
    units
    faq
@@ -45,12 +46,16 @@ Documentation Contents
 Releases
 --------
 
+* Version 1.1.2
+
+  Current version using Python 3.6 with some minor bug fixes.
+
 * Version 1.1.1
-  
-  Latest version using Lua 5.2.x and supports Python.
+
+  Previous version using Lua 5.2.x and supports Python.
 
 * Version 1.0
-  
+
   This is the original version that was published in Computer Physics Communications. It requires on Lua 5.1.x and packs Python bindings.
 
 Indices and tables
