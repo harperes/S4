@@ -827,6 +827,50 @@ py::array_t<double> PySimulation::GetPoyntingFlux(std::string pyLayer, double py
 
     }
 
+py::array_t<double> PySimulation::GetFieldAtPoint(py::array_t<double> pyPoint)
+    {
+    // This will return the double in the exact same form as the
+    double point[3];
+    double fields[12];
+
+    py::buffer_info pointInfo = pyPoint.request();
+    // check that the point is appropriately formatted
+    if (pointInfo.ndim != 1)
+        {
+        std::ostringstream s;
+        s << "point must be a 1D array with 3 elements: [x, y, z]";
+        throw std::runtime_error(s.str());
+        }
+    else if (pointInfo.shape[0] != 3)
+        {
+        std::ostringstream s;
+        s << "point must be a 1D array with 3 elements: [x, y, z]";
+        throw std::runtime_error(s.str());
+        }
+    double *pointPtr = static_cast<double *>(pointInfo.ptr);
+    std::memcpy(point, pointPtr, 3 * sizeof(double));
+
+    S4_real eField[6];
+    S4_real hField[6];
+
+    int ret = Simulation_GetField(S, point, eField, hField);
+
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "GetField returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    // copy values into the fields array
+    std::memcpy(fields, eField, 6 * sizeof(double));
+    std::memcpy(fields+6, hField, 6 * sizeof(double));
+    // format the return value. will be a 12-element array
+    auto pyField = py::array_t<double>(12);
+    auto pyBuffer = pyField.request();
+    std::memcpy(pyBuffer.ptr, fields, 12 * sizeof(double));
+    return pyField;
+    }
+
 PYBIND11_MODULE(_S4, m)
     {
     m.doc() = "C++ wrapper for S4 RCWA Code. Care should be taken directly interacting with \
@@ -858,6 +902,7 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetResolution", &PySimulation::SetResolution)
         .def("_TestArray", &PySimulation::TestArray)
         .def("_GetPoyntingFlux", &PySimulation::GetPoyntingFlux)
+        .def("_GetFieldAtPoint", &PySimulation::GetFieldAtPoint)
         // .def("Clone", &S4_Simulation_Clone)
         // .def("New", &S4_Simulation_New)
         ;

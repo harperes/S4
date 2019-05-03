@@ -68,6 +68,7 @@ class PySimulation
     void SetResolution(int pyResolution);
     py::array_t<double> TestArray();
     py::array_t<double> GetPoyntingFlux(std::string pyLayer, double pyZOffset);
+    py::array_t<double> GetFieldAtPoint(py::array_t<double> pyPoint);
 
     private:
     S4_Simulation* S;

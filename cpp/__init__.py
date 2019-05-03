@@ -783,3 +783,48 @@ class Simulation:
         # get the data
         powerFlux = self._S4Sim._GetPoyntingFlux(l_layer, l_offset)
         return powerFlux
+
+    def get_field_at_point(self, point):
+        """
+        Get the electric and magnetic field at a particular point in the
+        structure
+
+        :param point: :math: `\\left(x, y, z, \\right)` point in the structure at
+                      which to retrieve the value of the electric field
+        :type point: :class:`numpy.ndarray`, shape= :math:`\\left(3, \\right)`,
+                     dtype=float
+
+        :return: complex electric and magnetic field vector at specified point
+                 :math:`\\left[ \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
+                 H_y, H_z \\right] \\right]`
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(2, 3 \\right)`,
+               dtype=complex
+        """
+
+        self._check_for_sim()
+
+        # check that point is valid
+        l_point = np.asarray(point)
+        if not l_point.ndim == 1:
+            raise RuntimeError("Point must be a vector (1D array)")
+        if not l_point.shape[0] == 3:
+            raise RuntimeError("Point must be a 3 element vector (x, y, z)")
+        l_point = np.require(l_point, dtype=np.float64, requirements=["C"])
+
+        # get the data
+        raw_field = self._S4Sim._GetFieldAtPoint(point)
+
+        # reshape
+        e_field_real = raw_field[0:3]
+        e_field_imag = raw_field[3:6]
+        h_field_real = raw_field[6:9]
+        h_field_imag = raw_field[9:12]
+
+        e_field = e_field_real + 1j * e_field_imag
+        h_field = h_field_real + 1j * h_field_imag
+
+        field = np.zeros(shape=(2,3), dtype=np.complex128)
+        field[0] = e_field[:]
+        field[1] = h_field[:]
+
+        return field
