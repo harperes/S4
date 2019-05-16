@@ -6,7 +6,7 @@ software on Thanos and Ultron. Please follow these instructions to
 install and use S4.**
 
 This guide covers the installation of the S4 software. This guide
-currently (<2019-02-13 Wed>) only covers installation on Ubuntu Linux;
+currently (<2019-05-15 Wed>) only covers installation on Ubuntu Linux;
 this software *should* be able to be installed on any Unix/Linux
 machine, but the exact packages and steps will be OS dependent.
 
@@ -51,7 +51,7 @@ this directory in your home directory:
 
 .. code:: bash
 
-   $: mkdir ~/code
+   $: mkdir ~/build
 
 After compiling a number of projects, your build directory will look a
 little like this
@@ -81,6 +81,15 @@ Together, it will look like
     |     |---pybind11/
     |     |---OpenBLAS/
     |     |---S4/
+
+Then, when compiling a package, you will issue a command similar to:
+
+.. code:: bash
+
+   $: S4_CODE=~/code/S4
+   $: S4_BUILD=~/build/S4
+   $: cd ${S4_BUILD}
+   $: ccmake ${S4_CODE} <args>
 
 Installing Prerequisites
 ------------------------
@@ -153,12 +162,8 @@ Make sure to enable conda forge:
 
    .. code:: bash
 
-      $: cd /pth/to/MANTIS
+      $: S4_CODE=~/code/S4
       $: conda env create -f s4py.yml
-
-   This yml file is contained in the MANTIS repository (see `Install
-   MANTIS <https://github.com/harperes/MANTIS>`__ for instructions to
-   obtain the repository).
 
 Environment Setup
 -----------------
@@ -172,6 +177,8 @@ few examples of how you may do so are included below:
    $: sudo vim <file>
    $: sudo emacs <file>
    $: sudo gedit <file>
+
+**NOTE:** you can also open a file with sudo privileges in emacs *via* `C-x C-f /sudo::`
 
 Each step will include a file name, and below the text that needs to be
 added to the file. For example:
@@ -227,6 +234,8 @@ installed on Thanos, Ultron, etc.
 
       PATH="/opt/pybind11:/opt/OpenBLAS/lib:/opt/OpenBLAS:..."
 
+   **NOTE:** You need to include *lib* after *OpenBLAS/* or cmake will not be find OpenBLAS
+
    The ``...`` represents **THE REST OF THE EXISTING PATH**, so that
    your new path will look something like:
 
@@ -253,7 +262,8 @@ to python.
 
       # suggested location for pybind11 repository: ~/code
       # ie /pth/to/code = ~/code
-      $: cd /pth/to/code
+      $: PATH_CODE=~/code
+      $: cd ${PATH_CODE}
       $: git clone https://github.com/pybind/pybind11
 
 #. Install python module
@@ -261,8 +271,8 @@ to python.
    .. code:: bash
 
       # suggested location for pybind11 repository: ~/code/pybind11
-      # ie /pth/to/pybind11 = ~/code/pybind11
-      $: cd /pth/to/pybind11
+      $: PB11_CODE=~/code/pybind11
+      $: cd ${PB11_CODE}
       $: pip install . --user
 
    If you are installing using the ``--user`` flag, this should install
@@ -318,7 +328,8 @@ to python.
 
       # it is suggested to build out of a build directory
       # ie ~/build
-      $: cd /pth/to/build/dir
+      $: PATH_BUILD=~/build
+      $: cd ${PATH_BUILD}
       $: mkdir pybind11
       $: cd pybind11
       # you should now be in ~/build/pybind11
@@ -327,12 +338,14 @@ to python.
       # run cmake, installing to the install location
       # suggested install prefix: /opt/pybind11
       # ie /pth/to/pybind11_install = /opt/pybind11
+      $: PB11_CODE=~/code/pybind11
+      $: PB11_INSTALL=/opt/pybind11
       # Use if running from the system or base miniconda python
-      $: ccmake /pth/to/pybind11/ -DCMAKE_INSTALL_PREFIX=/pth/to/pybind11_install
+      $: ccmake ${PB11_CODE} -DCMAKE_INSTALL_PREFIX=${PB11_INSTALL}
       # Use if running from a miniconda environment python
-      $: ccmake /pth/to/pybind11/ -DCMAKE_INSTALL_PREFIX=/pth/to/pybind11_install \
-                                  -DPYTHON_EXECUTABLE=/pth/to/conda/env/bin/python \
-                                  -DPYTHON_LIBRARY=/pth/to/conda/env/lib/python3.6m.so
+      $: ccmake ${PB11_CODE} -DCMAKE_INSTALL_PREFIX=${PB11_INSTALL} \
+                             -DPYTHON_EXECUTABLE=/pth/to/conda/env/bin/python \
+                             -DPYTHON_LIBRARY=/pth/to/conda/env/lib/python3.6m.so
       # If this is the first time you run ccmake, you should see a screen
       # displaying "EMPTY CACHE"
       # now configure
@@ -353,7 +366,8 @@ to python.
    .. code:: bash
 
       # edit .bashrc PATH
-      export PATH="/pth/to/pybind11_install:$PATH"
+      $: PB11_INSTALL=/opt/pybind11
+      export PATH="${PB11_INSTALL}:$PATH"
       $: source .bashrc
 
 Compile and Install OpenBLAS
@@ -368,7 +382,8 @@ Compile and Install OpenBLAS
    .. code:: bash
 
       # suggestion: ~/code
-      $: cd /pth/to/code/dir
+      $: PATH_CODE=~/code
+      $: cd ${PATH_CODE}
       $: git clone https://github.com/xianyi/OpenBLAS
 
 #. Make and Install
@@ -377,22 +392,25 @@ Compile and Install OpenBLAS
 
       # suggestion: ~/code/OpenBLAS
       # ie /pth/to/OpenBLAS = ~/code/OpenBLAS
-      $: cd pth/to/OpenBLAS
+      $: OB_CODE=~/code/OpenBLAS
+      $: cd ${OB_CODE}
       # this is required to ensure optimal performance
       # (otherwise OpenBLAS will use MPI to parallelize
       # and the parallelism gained will be sub-optimal)
       $: export OPENBLAS_NUM_THREADS=1
       # suggested install location: /opt/OpenBLAS
       # ie /pth/to/OpenBLAS_install = /opt/OpenBLAS
-      $: make USE_THREAD=0 PREFIX=/pth/to/OpenBLAS_install
+      $: OB_INSTALL=/opt/OpenBLAS
+      $: make USE_THREAD=0 PREFIX=${OB_INSTALL}
       # suggested: /pth/to/build = ~/build
-      $: cd /pth/to/build
+      $: PATH_BUILD=~/build
+      $: cd ${PATH_BUILD}
       $: mkdir OpenBLAS
-      $: ccmake ~/pth/to/OpenBLAS -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=/pth/to/OpenBLAS_Install
+      $: ccmake ${OB_CODE} -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=${OB_INSTALL}
       $: make install -j10
-      $: cd /pth/to/OpenBLAS
-      $: make USE_THREAD=0 PREFIX=/path/to/OpenBLAS_install
-      $: sudo make USE_THREAD=0 PREFIX=/path/to/OpenBLAS_install install
+      $: cd ${OB_CODE}
+      $: make USE_THREAD=0 PREFIX=${OB_INSTALL}
+      $: sudo make USE_THREAD=0 PREFIX=${OB_INSTALL} install
 
    **Note: for some reason I've only been able to successfully get cmake
    to find both openblas and lapack correctly if installed in this
@@ -415,6 +433,8 @@ Compile and Install OpenBLAS
       # edit .bashrc PATH
       export PATH="/pth/to/OpenBLAS_install/lib:/pth/to/OpenBLAS_install:$PATH"
       $: source .bashrc
+
+   **NOTE:** Again, make sure to include both `/pth/to/OpenBLAS_INSTALL/lib` and `/pth/to/OpenBLAS_install`
 
 #. Add ``OPENBLAS_NUM_THREADS=1`` to .bashrc
 
@@ -443,7 +463,8 @@ Now to install S4. Instructions are very similar to the above.
    .. code:: bash
 
       # suggestion: ~/code
-      $: cd /pth/to/code/dir
+      $: PATH_CODE=~/code
+      $: cd ${PATH_CODE}
       $: git clone https://github.com/harperes/S4.git
 
 #. Compile S4
@@ -455,8 +476,10 @@ Now to install S4. Instructions are very similar to the above.
    .. code:: bash
 
       # suggestion: ~/build
-      $: cd /pth/to/build/dir
-      $: ccmake /pth/to/S4 -DCMAKE_INSTALL_PREFIX=/opt
+      $: S4_CODE=~/code/S4
+      $: PATH_BUILD=~/build
+      $: cd ${PATH_BUILD}
+      $: ccmake ${S4_CODE} -DCMAKE_INSTALL_PREFIX=/opt
       $: (sudo) make install -j6
 
    **Note: on Ultron and Thanos S4 is properly compiled for all users by
@@ -545,7 +568,7 @@ something like:
 
    ...
    # added by Miniconda3 installer
-   export PATH="/home/UNAME/miniconda3/bin:$PATH"
+   export PATH="/home/${USER}/miniconda3/bin:$PATH"
    ...
 
 To avoid using this python when compiling your own software and compile
@@ -556,7 +579,7 @@ like
 
    ...
    # added by Miniconda3 installer
-   # export PATH="/home/UNAME/miniconda3/bin:$PATH"
+   # export PATH="/home/${USER}/miniconda3/bin:$PATH"
    ...
 
 Now, either start a new terminal or re-source your .bashrc
