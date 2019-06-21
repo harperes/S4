@@ -795,8 +795,8 @@ class Simulation:
                      dtype=float
 
         :return: complex electric and magnetic field vector at specified point
-                 :math:`\\left[ \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
-                 H_y, H_z \\right] \\right]`
+                 :math:`\\left( \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
+                 H_y, H_z \\right] \\right)`
         :type: :class:`numpy.ndarray`, shape= :math:`\\left(2, 3 \\right)`,
                dtype=complex
         """
@@ -822,12 +822,14 @@ class Simulation:
 
         e_field = e_field_real + 1j * e_field_imag
         h_field = h_field_real + 1j * h_field_imag
+        e_field = np.ascontiguousarray(e_field, dtype=np.complex128)
+        h_field = np.ascontiguousarray(e_field, dtype=np.complex128)
 
-        field = np.zeros(shape=(2,3), dtype=np.complex128)
-        field[0] = e_field[:]
-        field[1] = h_field[:]
+        # field = np.zeros(shape=(2,3), dtype=np.complex128)
+        # field[0] = e_field[:]
+        # field[1] = h_field[:]
 
-        return field
+        return e_field, h_field
 
     def get_field_plane(self, z, n_uv):
         """
@@ -842,10 +844,10 @@ class Simulation:
                     dtype=float
 
         :return: complex electric and magnetic field vector at specified point
-                 :math:`\\left[ \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
-                 H_y, H_z \\right] \\right]`
-        :type: :class:`numpy.ndarray`, shape= :math:`\\left(n_uv[0], n_uv[1],
-               2, 3 \\right)`, dtype=complex
+                 :math:`\\left( \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
+                 H_y, H_z \\right] \\right)`
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(n_uv[1], n_uv[0],
+               3 \\right)`, dtype=complex
         """
 
         self._check_for_sim()
@@ -865,18 +867,8 @@ class Simulation:
             raise RuntimeError("n_uv must be a 2 element vector (nu, nv)")
         l_n_uv = np.require(l_n_uv, dtype=np.int64, requirements=["C"])
         efield, hfield = self._S4Sim._GetFieldPlane(l_z, l_n_uv)
-        # reshape
-        # e_field_real = raw_field[0:3]
-        # e_field_imag = raw_field[3:6]
-        # h_field_real = raw_field[6:9]
-        # h_field_imag = raw_field[9:12]
-
-        # e_field = e_field_real + 1j * e_field_imag
-        # h_field = h_field_real + 1j * h_field_imag
-
-        # field = np.zeros(shape=(2, 3), dtype=np.complex128)
-        # field[0] = e_field[:]
-        # field[1] = h_field[:]
+        efield = efield.reshape(l_n_uv[1], l_n_uv[0], 3)
+        hfield = hfield.reshape(l_n_uv[1], l_n_uv[0], 3)
 
         return efield, hfield
 
