@@ -828,3 +828,59 @@ class Simulation:
         field[1] = h_field[:]
 
         return field
+
+    def get_field_plane(self, z, n_uv):
+        """
+        Get the electric and magnetic field as a grid at a particular z
+        coordinate. This is more efficient than get_field_at_point().
+
+        :param z: the :math:`z`-coordinate of the plane on which to obtain
+                  the field
+        :type z: float
+        :param n_uv:
+        :type n_uv: :class:`numpy.ndarray`, shape= :math:`\\left(2 \\right)`,
+                    dtype=float
+
+        :return: complex electric and magnetic field vector at specified point
+                 :math:`\\left[ \\left[ E_x, E_y, E_z \\right], \\left[ H_x,
+                 H_y, H_z \\right] \\right]`
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(n_uv[0], n_uv[1],
+               2, 3 \\right)`, dtype=complex
+        """
+
+        self._check_for_sim()
+
+        # check that the z is valid
+
+        try:
+            l_z = float(z)
+        except Exception as e:
+            print("attempted to convert z to a float and failed.")
+            raise e
+
+        l_n_uv = np.asarray(n_uv)
+        if not l_n_uv.ndim == 1:
+            raise RuntimeError("n_uv must be a vector (1D array)")
+        if not l_n_uv.shape[0] == 2:
+            raise RuntimeError("n_uv must be a 2 element vector (nu, nv)")
+        l_n_uv = np.require(l_n_uv, dtype=np.int64, requirements=["C"])
+        efield, hfield = self._S4Sim._GetFieldPlane(l_z, l_n_uv)
+        # reshape
+        # e_field_real = raw_field[0:3]
+        # e_field_imag = raw_field[3:6]
+        # h_field_real = raw_field[6:9]
+        # h_field_imag = raw_field[9:12]
+
+        # e_field = e_field_real + 1j * e_field_imag
+        # h_field = h_field_real + 1j * h_field_imag
+
+        # field = np.zeros(shape=(2, 3), dtype=np.complex128)
+        # field[0] = e_field[:]
+        # field[1] = h_field[:]
+
+        return efield, hfield
+
+    def _test(self):
+
+        x = self._S4Sim._TestArray()
+        return x

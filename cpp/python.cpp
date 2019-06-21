@@ -776,17 +776,45 @@ void PySimulation::SetResolution(int pyResolution)
     }
 
 py::array_t<double> PySimulation::TestArray()
+// py::array_t<std::complex<double>> PySimulation::TestArray()
     {
     // double testPtr[2];
     // testPtr[0] = 2.0;
     // testPtr[1] = 3.0;
-    std::vector<double> testPtr(2);
-    testPtr[0] = 2.0;
-    testPtr[1] = 3.0;
+
+    // std::vector<double> testPtr(2);
+    // testPtr[0] = 2.0;
+    // testPtr[1] = 3.0;
+    // auto x = py::array_t<double>(2);
+    // auto x_buffer = x.request();
+    // std::memcpy(x_buffer.ptr, testPtr.data(), testPtr.size()*sizeof(double));
+    // return x;
+
+    // old school
+    // double *testPtr;
+    // testPtr = (double *)malloc(sizeof(double)* 4);
+    // testPtr[0] = 2.0;
+    // testPtr[1] = 3.0;
+    // testPtr[2] = 6.0;
+    // testPtr[3] = 4.0;
+    // std::complex<double> *complexPtr;
+    // complexPtr = reinterpret_cast<std::complex<double>*>(testPtr);
+    // auto x = py::array_t<std::complex<double>>(2);
+    // auto x_buffer = x.request();
+    // std::memcpy(x_buffer.ptr, complexPtr, 2*sizeof(std::complex<double>));
+    // return x;
+
+    std::complex<double> *testPtr;
+    testPtr = (std::complex<double> *)malloc(sizeof(std::complex<double>)* 1);
+    std::complex<double> l_complex(1, 2);
+    testPtr[0] = l_complex;
+    double *doublePtr;
+    doublePtr = reinterpret_cast<double*>(testPtr);
     auto x = py::array_t<double>(2);
     auto x_buffer = x.request();
-    std::memcpy(x_buffer.ptr, testPtr.data(), testPtr.size()*sizeof(double));
+    std::memcpy(x_buffer.ptr, doublePtr, 2*sizeof(double));
     return x;
+
     // x = py::array_t<double>(
     //     {2},
     //     {8},
@@ -871,6 +899,77 @@ py::array_t<double> PySimulation::GetFieldAtPoint(py::array_t<double> pyPoint)
     return pyField;
     }
 
+std::tuple<py::array_t<std::complex<double>>, py::array_t<std::complex<double>>> PySimulation::GetFieldPlane(double pyZ, py::array_t<int> pyNUV)
+    {
+    // This will return the double in the exact same form as the
+    double z = pyZ;
+    int nUV[2];
+
+    py::buffer_info nUVInfo = pyNUV.request();
+    // check that the point is appropriately formatted
+    if (nUVInfo.ndim != 1)
+        {
+        std::ostringstream s;
+        s << "nUV must be a 1D array with 2 elements: [nU, nV]";
+        throw std::runtime_error(s.str());
+        }
+    else if (nUVInfo.shape[0] != 2)
+        {
+        std::ostringstream s;
+        s << "nUV must be a 1D array with 2 elements: [nU, nV]";
+        throw std::runtime_error(s.str());
+        }
+    int *nUVPtr = static_cast<int *>(nUVInfo.ptr);
+    std::memcpy(nUV, nUVPtr, 2 * sizeof(int));
+
+    // double eField[6];
+    // double hField[6];
+    int fieldArrSize = 6 * nUV[0] * nUV[1];
+    int complexArrSize = 3 * nUV[0] * nUV[1];
+    // extract electric, magnetic fields and convert to complex arrays
+    // start with the electric
+    double *eField;
+    eField = (double *)malloc(sizeof(double) * fieldArrSize);
+    // and now magnetic field
+    double *hField;
+    hField = (double *)malloc(sizeof(double) * fieldArrSize);
+    // do the calculation
+    int ret = Simulation_GetFieldPlane(S, nUV, z, eField, hField);
+    // check for errors
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "GetField returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    // and now convert
+    // first electric
+    std::complex<double> *complexEField;
+    complexEField = reinterpret_cast<std::complex<double>*>(eField);
+    // and now magnetic
+    std::complex<double> *complexHField;
+    complexHField = reinterpret_cast<std::complex<double>*>(hField);
+    // convert to python arrays
+    // first electric
+    auto pyEField = py::array_t<std::complex<double>>(complexArrSize);
+    auto pyEFieldBuffer = pyEField.request();
+    std::memcpy(pyEFieldBuffer.ptr, complexEField, complexArrSize * sizeof(std::complex<double>));
+    // and now magnetic
+    auto pyHField = py::array_t<std::complex<double>>(complexArrSize);
+    auto pyHFieldBuffer = pyHField.request();
+    std::memcpy(pyHFieldBuffer.ptr, complexHField, complexArrSize * sizeof(std::complex<double>));
+    return std::make_tuple(pyEField, pyHField);
+
+    // old code
+    // std::memcpy(fields, eField, fieldArrSize * sizeof(double));
+    // std::memcpy(fields+fieldArrSize, hField, fieldArrSize * sizeof(double));
+    // // format the return value. will be a 12-element array
+    // auto pyField = py::array_t<double>(2*fieldArrSize);
+    // auto pyBuffer = pyField.request();
+    // std::memcpy(pyBuffer.ptr, fields, 2*fieldArrSize * sizeof(double));
+    // return pyField;
+    }
+
 PYBIND11_MODULE(_S4, m)
     {
     m.doc() = "C++ wrapper for S4 RCWA Code. Care should be taken directly interacting with \
@@ -903,6 +1002,7 @@ this module. End-users should use the python wrapper instead.";
         .def("_TestArray", &PySimulation::TestArray)
         .def("_GetPoyntingFlux", &PySimulation::GetPoyntingFlux)
         .def("_GetFieldAtPoint", &PySimulation::GetFieldAtPoint)
+        .def("_GetFieldPlane", &PySimulation::GetFieldPlane)
         // .def("Clone", &S4_Simulation_Clone)
         // .def("New", &S4_Simulation_New)
         ;
