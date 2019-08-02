@@ -1835,183 +1835,221 @@ double Simulation_GetUnitCellSize(const S4_Simulation *S){
 
 int Simulation_ComputeLayerModes(S4_Simulation *S, S4_Layer *L, LayerModes **layer_modes)
     {
-  S4_TRACE("> Simulation_ComputeLayerModes(S=%p, L=%p (%s), modes=%p (%p)) [omega=%f]\n", S, L, (NULL != L && NULL != L->name ? L->name : ""), layer_modes, (NULL != layer_modes ? *layer_modes : NULL), S->omega[0]);
-  if(NULL == S)
+    S4_TRACE("> Simulation_ComputeLayerModes(S=%p, L=%p (%s), modes=%p (%p)) [omega=%f]\n", S, L, (NULL != L && NULL != L->name ? L->name : ""), layer_modes, (NULL != layer_modes ? *layer_modes : NULL), S->omega[0]);
+    if(NULL == S)
         {
-    S4_TRACE("< Simulation_ComputeLayerModes (failed; S == NULL) [omega=%f]\n", S->omega[0]);
-    return -1;
+        S4_TRACE("< Simulation_ComputeLayerModes (failed; S == NULL) [omega=%f]\n", S->omega[0]);
+        return -1;
         }
-  if(NULL == L)
+    if(NULL == L)
         {
-    S4_TRACE("< Simulation_ComputeLayerModes (failed; L == NULL) [omega=%f]\n", S->omega[0]);
-    return -2;
+        S4_TRACE("< Simulation_ComputeLayerModes (failed; L == NULL) [omega=%f]\n", S->omega[0]);
+        return -2;
         }
-  if(NULL == layer_modes)
+    if(NULL == layer_modes)
         {
-    S4_TRACE("< Simulation_ComputeLayerModes (early exit; modes == NULL) [omega=%f]\n", S->omega[0]);
-    return 0;
+        S4_TRACE("< Simulation_ComputeLayerModes (early exit; modes == NULL) [omega=%f]\n", S->omega[0]);
+        return 0;
         }
 
-  S4_VERB(1, "Computing modes of layer: %s\n", NULL != L->name ? L->name : "");
+    S4_VERB(1, "Computing modes of layer: %s\n", NULL != L->name ? L->name : "");
 
-  *layer_modes = (LayerModes*)malloc(sizeof(LayerModes));
-  LayerModes *pB = *layer_modes;
-  const int n = S->n_G;
-  const int n2 = 2*n;
-  const int nn = n*n;
-  const int n2n2 = n2*n2;
+    *layer_modes = (LayerModes*)malloc(sizeof(LayerModes));
+    LayerModes *pB = *layer_modes;
+    const int n = S->n_G;
+    const int n2 = 2*n;
+    const int nn = n*n;
+    const int n2n2 = n2*n2;
 
-  size_t kp_size = n2n2;
-  size_t phi_size = n2n2;
-  size_t Epsilon_inv_size = nn;
-  size_t Epsilon2_size = n2n2;
-  pB->epstype = EPSILON2_TYPE_FULL;
-  if(0 == L->pattern.nshapes){
-    const S4_Material *M;
-    if(L->copy < 0){
-      M = &S->material[L->material];
-    }else{
-      M = &S->material[S->layer[L->copy].material];
-    }
-    if(0 == M->type){
-      phi_size = 0;
-      pB->epstype = EPSILON2_TYPE_BLKDIAG1_SCALAR;
-    }
-  }
-  if(S->options.use_less_memory){
-    kp_size = 0;
-  }
-
-  pB->q = (std::complex<double>*)S4_malloc(sizeof(std::complex<double>)*(
-    2*n + // for q
-    kp_size + phi_size + Epsilon_inv_size + Epsilon2_size
-    ));
-  pB->kp = pB->q + n2;
-  pB->phi = pB->kp + kp_size;
-  pB->Epsilon_inv = pB->phi + phi_size;
-  pB->Epsilon2 = pB->Epsilon_inv + Epsilon_inv_size;
-  //pB->Epsilon = pB->Epsilon2 + n2n2;
-
-  if(0 == phi_size){
-    pB->phi = NULL;
-  }
-  if(0 == kp_size){
-    pB->kp = NULL;
-  }
-
-  // Outline of the epsilon matrix generation code below:
-  //
-  // If no shapes
-  //   If background material is scalar epsilon
-  //     Solve uniform layer eigensystem
-  //   Else
-  //     Generate the 4 quadrants of Epsilon2 and solve the generic layer eigensystem
-  // Else -- not uniform layer
-  //   If discretize epsilon
-  //     If using subpixel smoothing
-  //       Apply Kottke
-  //     ElseIf polarization basis
-  //       If use complex basis
-  //         Apply PolBasisJones
-  //       Else
-  //         Apply PolBasisNV
-  //     Else
-  //       Apply FFT
-  //   Else
-  //     Apply ClosedForm
-  if(0 == L->pattern.nshapes){
-    const S4_Material *M;
-    if(L->copy < 0){
-      //eps_scalar = Simulation_GetEpsilonByName(S, L->material);
-      M = &S->material[L->material];
-    }else{
-      //eps_scalar = Simulation_GetEpsilonByName(S, Simulation_GetLayerByName(S, L->copy, NULL)->material);
-      M = &S->material[S->layer[L->copy].material];
-    }
-    if(0 == M->type){
-      std::complex<double> eps_scalar(M->eps.s[0], M->eps.s[1]);
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,1./eps_scalar,pB->Epsilon_inv, n);
-      RNP::TBLAS::SetMatrix<'A'>(n2,n2,0.,eps_scalar,pB->Epsilon2, n2);
-      SolveLayerEigensystem_uniform(
-        std::complex<double>(S->omega[0],S->omega[1]), n, S->kx, S->ky,
-        eps_scalar, pB->q, pB->kp, pB->phi);
-    }else{
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,1./std::complex<double>(M->eps.abcde[8],M->eps.abcde[9]),pB->Epsilon_inv, n);
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[0],M->eps.abcde[1]),&pB->Epsilon2[0+0*n2], n2);
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[4],M->eps.abcde[5]),&pB->Epsilon2[n+0*n2], n2);
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[2],M->eps.abcde[3]),&pB->Epsilon2[0+n*n2], n2);
-      RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[6],M->eps.abcde[7]),&pB->Epsilon2[n+n*n2], n2);
-
-      S4_VERB(1, "Solving eigensystem of layer: %s\n", NULL != L->name ? L->name : "");
-      SolveLayerEigensystem(
-        std::complex<double>(S->omega[0],S->omega[1]), n, S->kx, S->ky,
-        pB->Epsilon_inv, pB->Epsilon2, pB->epstype, pB->q, pB->kp, pB->phi);
-    }
-  }else{ // not a uniform layer
-    S4_VERB(1, "Generating epsilon matrix of layer: %s\n", NULL != L->name ? L->name : "");
-    if(S->options.use_experimental_fmm){
-      FMMGetEpsilon_Experimental(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-    }else{
-      if(S->options.use_discretized_epsilon){
-        if(S->options.use_subpixel_smoothing){
-          FMMGetEpsilon_Kottke(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-        }else{ // not using subpixel smoothing
-          FMMGetEpsilon_FFT(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-          if(S->options.use_polarization_basis){
-            if(S->options.use_jones_vector_basis){
-              FMMGetEpsilon_PolBasisJones(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-            }else if(S->options.use_normal_vector_basis){
-              FMMGetEpsilon_PolBasisNV(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-            }else{
-              FMMGetEpsilon_PolBasisVL(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+    size_t kp_size = n2n2;
+    size_t phi_size = n2n2;
+    size_t Epsilon_inv_size = nn;
+    size_t Epsilon2_size = n2n2;
+    pB->epstype = EPSILON2_TYPE_FULL;
+    if(0 == L->pattern.nshapes)
+        {
+        const S4_Material *M;
+        if(L->copy < 0)
+            {
+            M = &S->material[L->material];
             }
-          }
+        else
+            {
+            M = &S->material[S->layer[L->copy].material];
+            }
+        if(0 == M->type)
+            {
+            phi_size = 0;
+            pB->epstype = EPSILON2_TYPE_BLKDIAG1_SCALAR;
+            }
         }
-      }else{
-        FMMGetEpsilon_ClosedForm(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-        if(S->options.use_polarization_basis){
-          if(S->options.use_jones_vector_basis){
-            FMMGetEpsilon_PolBasisJones(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-          }else if(S->options.use_normal_vector_basis){
-            FMMGetEpsilon_PolBasisNV(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-          }else{
-            FMMGetEpsilon_PolBasisVL(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
-          }
+    if(S->options.use_less_memory)
+        {
+        kp_size = 0;
         }
-      }
-    }
-//std::cerr << pB->Epsilon2[0] << "\t" << pB->Epsilon2[1] << "\t" << pB->Epsilon_inv[0] << "\t" << pB->Epsilon_inv[1] << std::endl;
-    S4_VERB(1, "Solving eigensystem of layer: %s\n", NULL != L->name ? L->name : "");
-    {
-      size_t lwork = (size_t)-1;
-      double *rwork = (double*)S4_malloc(sizeof(double) * 4*n);
-      std::complex<double> *work = NULL;
-      std::complex<double> dum;
-      SolveLayerEigensystem(
-        std::complex<double>(S->omega[0],S->omega[1]), n,
-        S->kx, S->ky,
-        pB->Epsilon_inv, pB->Epsilon2, pB->epstype,
-        pB->q, pB->kp, pB->phi,
-        &dum, rwork, lwork
-      );
-      lwork = (int)(dum.real() + 0.5);
-      work = (std::complex<double>*)S4_malloc(sizeof(std::complex<double>) * lwork);
-      SolveLayerEigensystem(
-        std::complex<double>(S->omega[0],S->omega[1]), n,
-        S->kx, S->ky,
-        pB->Epsilon_inv, pB->Epsilon2, pB->epstype,
-        pB->q, pB->kp, pB->phi,
-        work, rwork, lwork
-      );
-      S4_free(work);
-      S4_free(rwork);
-    }
-  }
-  S4_TRACE("I  q[0] = %f,%f [omega=%f]\n", pB->q[0].real(), pB->q[0].imag(), S->omega[0]);
 
-  S4_TRACE("< Simulation_ComputeLayerModes [omega=%f]\n", S->omega[0]);
-  return 0;
-}
+    pB->q = (std::complex<double>*)S4_malloc(sizeof(std::complex<double>)*(
+            2*n + // for q
+            kp_size + phi_size + Epsilon_inv_size + Epsilon2_size
+            ));
+    pB->kp = pB->q + n2;
+    pB->phi = pB->kp + kp_size;
+    pB->Epsilon_inv = pB->phi + phi_size;
+    pB->Epsilon2 = pB->Epsilon_inv + Epsilon_inv_size;
+    //pB->Epsilon = pB->Epsilon2 + n2n2;
+
+    if(0 == phi_size)
+        {
+        pB->phi = NULL;
+        }
+    if(0 == kp_size)
+        {
+        pB->kp = NULL;
+        }
+
+    // Outline of the epsilon matrix generation code below:
+    //
+    // If no shapes
+    //   If background material is scalar epsilon
+    //     Solve uniform layer eigensystem
+    //   Else
+    //     Generate the 4 quadrants of Epsilon2 and solve the generic layer eigensystem
+    // Else -- not uniform layer
+    //   If discretize epsilon
+    //     If using subpixel smoothing
+    //       Apply Kottke
+    //     ElseIf polarization basis
+    //       If use complex basis
+    //         Apply PolBasisJones
+    //       Else
+    //         Apply PolBasisNV
+    //     Else
+    //       Apply FFT
+    //   Else
+    //     Apply ClosedForm
+    if(0 == L->pattern.nshapes)
+        {
+        const S4_Material *M;
+        if(L->copy < 0)
+            {
+            //eps_scalar = Simulation_GetEpsilonByName(S, L->material);
+            M = &S->material[L->material];
+            }
+        else
+            {
+            //eps_scalar = Simulation_GetEpsilonByName(S, Simulation_GetLayerByName(S, L->copy, NULL)->material);
+            M = &S->material[S->layer[L->copy].material];
+            }
+        if(0 == M->type)
+            {
+            std::complex<double> eps_scalar(M->eps.s[0], M->eps.s[1]);
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,1./eps_scalar,pB->Epsilon_inv, n);
+            RNP::TBLAS::SetMatrix<'A'>(n2,n2,0.,eps_scalar,pB->Epsilon2, n2);
+            SolveLayerEigensystem_uniform(
+                std::complex<double>(S->omega[0],S->omega[1]), n, S->kx, S->ky,
+                eps_scalar, pB->q, pB->kp, pB->phi);
+            }
+        else
+            {
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,1./std::complex<double>(M->eps.abcde[8],M->eps.abcde[9]),pB->Epsilon_inv, n);
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[0],M->eps.abcde[1]),&pB->Epsilon2[0+0*n2], n2);
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[4],M->eps.abcde[5]),&pB->Epsilon2[n+0*n2], n2);
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[2],M->eps.abcde[3]),&pB->Epsilon2[0+n*n2], n2);
+            RNP::TBLAS::SetMatrix<'A'>(n,n,0.,std::complex<double>(M->eps.abcde[6],M->eps.abcde[7]),&pB->Epsilon2[n+n*n2], n2);
+
+            S4_VERB(1, "Solving eigensystem of layer: %s\n", NULL != L->name ? L->name : "");
+            SolveLayerEigensystem(
+                std::complex<double>(S->omega[0],S->omega[1]), n, S->kx, S->ky,
+                pB->Epsilon_inv, pB->Epsilon2, pB->epstype, pB->q, pB->kp, pB->phi);
+            }
+        }
+    else
+        { // not a uniform layer
+        S4_VERB(1, "Generating epsilon matrix of layer: %s\n", NULL != L->name ? L->name : "");
+        if(S->options.use_experimental_fmm)
+            {
+            FMMGetEpsilon_Experimental(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+            }
+        else
+            {
+            if(S->options.use_discretized_epsilon)
+                {
+                if(S->options.use_subpixel_smoothing)
+                    {
+                    FMMGetEpsilon_Kottke(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                    }
+                else
+                    { // not using subpixel smoothing
+                    FMMGetEpsilon_FFT(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                    if(S->options.use_polarization_basis)
+                        {
+                        if(S->options.use_jones_vector_basis)
+                            {
+                            FMMGetEpsilon_PolBasisJones(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                            }
+                        else if(S->options.use_normal_vector_basis)
+                            {
+                            FMMGetEpsilon_PolBasisNV(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                            }
+                        else
+                            {
+                            FMMGetEpsilon_PolBasisVL(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                            }
+                        }
+                    }
+                }
+            else
+                {
+                FMMGetEpsilon_ClosedForm(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                if(S->options.use_polarization_basis)
+                    {
+                    if(S->options.use_jones_vector_basis)
+                        {
+                        FMMGetEpsilon_PolBasisJones(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                        }
+                    else if(S->options.use_normal_vector_basis)
+                        {
+                        FMMGetEpsilon_PolBasisNV(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                        }
+                    else
+                        {
+                        FMMGetEpsilon_PolBasisVL(S, L, n, pB->Epsilon2, pB->Epsilon_inv);
+                        }
+                    }
+                }
+            }
+// std::cerr << pB->Epsilon2[0] << "\t" << pB->Epsilon2[1] << "\t" << pB->Epsilon_inv[0] << "\t" << pB->Epsilon_inv[1] << std::endl;
+        S4_VERB(1, "Solving eigensystem of layer: %s\n", NULL != L->name ? L->name : "");
+            {
+            size_t lwork = (size_t)-1;
+            double *rwork = (double*)S4_malloc(sizeof(double) * 4*n);
+            std::complex<double> *work = NULL;
+            std::complex<double> dum;
+            SolveLayerEigensystem(
+                std::complex<double>(S->omega[0],S->omega[1]), n,
+                S->kx, S->ky,
+                pB->Epsilon_inv, pB->Epsilon2, pB->epstype,
+                pB->q, pB->kp, pB->phi,
+                &dum, rwork, lwork
+                );
+            lwork = (int)(dum.real() + 0.5);
+            work = (std::complex<double>*)S4_malloc(sizeof(std::complex<double>) * lwork);
+            SolveLayerEigensystem(
+                std::complex<double>(S->omega[0],S->omega[1]), n,
+                S->kx, S->ky,
+                pB->Epsilon_inv, pB->Epsilon2, pB->epstype,
+                pB->q, pB->kp, pB->phi,
+                work, rwork, lwork
+                );
+            S4_free(work);
+            S4_free(rwork);
+            }
+        }
+    S4_TRACE("I  q[0] = %f,%f [omega=%f]\n", pB->q[0].real(), pB->q[0].imag(), S->omega[0]);
+
+    S4_TRACE("< Simulation_ComputeLayerModes [omega=%f]\n", S->omega[0]);
+    return 0;
+    }
 
 // realistically, can only return an InitSolution code
 int S4_Simulation_GetPowerFlux(S4_Simulation *S, S4_LayerID id, const double *offset, double *powers){
@@ -2209,143 +2247,165 @@ int Simulation_GetAmplitudes(S4_Simulation *S, S4_Layer *layer, double offset, d
 }
 
 
-int S4_Simulation_GetWaves(S4_Simulation *S, S4_LayerID id, S4_real *wave){
-  S4_TRACE("> Simulation_GetWaves(S=%p, layer=%d, wave=%p) [omega=%f]\n",
-    S, id, wave, S->omega[0]);
-  int ret = 0;
-  if(NULL == S){ ret = -1; }
-  if(id < 0 || id >= S->n_layers){ ret = -2; }
-  if(NULL == wave){ ret = -3; }
-  if(0 != ret){
-    S4_TRACE("< Simulation_GetWaves (failed; ret = %d) [omega=%f]\n", ret, S->omega[0]);
-    return ret;
-  }
+int S4_Simulation_GetWaves(S4_Simulation *S, S4_LayerID id, S4_real *wave)
+    {
+    S4_TRACE("> Simulation_GetWaves(S=%p, layer=%d, wave=%p) [omega=%f]\n",
+        S, id, wave, S->omega[0]);
+    int ret = 0;
+    if(NULL == S)
+        {
+        ret = -1;
+        }
+    if(id < 0 || id >= S->n_layers)
+        {
+        ret = -2;
+        }
+    if(NULL == wave)
+        {
+        ret = -3;
+        }
+    if(0 != ret)
+        {
+        S4_TRACE("< Simulation_GetWaves (failed; ret = %d) [omega=%f]\n", ret, S->omega[0]);
+        return ret;
+        }
 
-  S4_Layer *layer = &S->layer[id];
+    S4_Layer *layer = &S->layer[id];
 
-  const double w = S->omega[0];
+    const double w = S->omega[0];
 
-  LayerModes *Lmodes;
-  std::complex<double> *Lsoln;
-  ret = Simulation_GetLayerSolution(S, layer, &Lmodes, &Lsoln);
-  if(0 != ret){
-    S4_TRACE("< Simulation_GetWaves (failed; Simulation_GetLayerSolution returned %d) [omega=%f]\n", ret, S->omega[0]);
-    return ret;
-  }
+    LayerModes *Lmodes;
+    std::complex<double> *Lsoln;
+    ret = Simulation_GetLayerSolution(S, layer, &Lmodes, &Lsoln);
+    if(0 != ret)
+        {
+        S4_TRACE("< Simulation_GetWaves (failed; Simulation_GetLayerSolution returned %d) [omega=%f]\n", ret, S->omega[0]);
+        return ret;
+        }
 
-  const int n = S->n_G;
-  const int n2 = 2*n;
-  const int n4 = 2*n2;
+    const int n = S->n_G;
+    const int n2 = 2*n;
+    const int n4 = 2*n2;
 
-  const std::complex<double> *ab = Lsoln;
+    const std::complex<double> *ab = Lsoln;
 
-  for(int i = 0; i < n; ++i){
-    const double kx = S->kx[i];
-    const double ky = S->ky[i];
-    const std::complex<double> qi = Lmodes->q[i];
-    for(int j = 0; j < 2; ++j){
-      double *curwave = &wave[(j*n+i)*11];
-      curwave[0] = kx;
-      curwave[1] = ky;
-      curwave[2] = Lmodes->q[i].real();
-      curwave[3] = Lmodes->q[i].imag();
-      if(0 != j){
-        curwave[2] = -curwave[2];
-        curwave[3] = -curwave[3];
-      }
-      double rd[3] = {
-        curwave[0],
-        curwave[1],
-        curwave[2]
-      };
-      geom_normalize3d(rd);
+    for(int i = 0; i < n; ++i)
+        {
+        const double kx = S->kx[i];
+        const double ky = S->ky[i];
+        const std::complex<double> qi = Lmodes->q[i];
+        for(int j = 0; j < 2; ++j)
+            {
+            double *curwave = &wave[(j*n+i)*11];
+            curwave[0] = kx;
+            curwave[1] = ky;
+            curwave[2] = Lmodes->q[i].real();
+            curwave[3] = Lmodes->q[i].imag();
+            if(0 != j)
+                {
+                curwave[2] = -curwave[2];
+                curwave[3] = -curwave[3];
+                }
+            double rd[3] = {
+                curwave[0],
+                curwave[1],
+                curwave[2]
+                };
+            geom_normalize3d(rd);
 /*
-if(qi.imag() == 0){
+  if(qi.imag() == 0){
   std::cout << "i = " << i << ", j = " << j << ", ab = " << ab[i+j*n2] << ", " << ab[i+n+j*n2] << std::endl;
   std::cout << "   kx = " << kx << ", ky = " << ky << std::endl;
   std::cout << "   qi = " << qi << std::endl;
 }*/
 
-{
-      const double qsign(0 == j ? 1 : -1);
-      const std::complex<double> Hx = ab[i  +j*n2];
-      const std::complex<double> Hy = ab[i+n+j*n2];
-      const std::complex<double> H[2][3] = {
-        { Hx, 0, -(kx*Hx)/(qsign*qi.real()) },
-        { 0, Hy, -(ky*Hy)/(qsign*qi.real()) }
-      };
-      // The E field is Cross[H,{kx,ky,(qsign*qi.real())}] / leps
-      std::complex<double> E[2][3];
-      const double sgn(qsign);
-      const S4_Material *M = NULL;
-      if(layer->material >= 0){
-        M = &S->material[layer->material];
-      }else{
-        M = &S->material[S->layer[layer->copy].material];
-      }
-      const double leps = (NULL != M ? M->eps.s[0] : 1);
-      E[0][2] = ky*Hx / leps;
-      E[0][0] =  kx*E[0][2]       / (sgn*qi.real());
-      E[0][1] = (ky*E[0][2] - Hx*w) / (sgn*qi.real());
-      E[1][2] = (-kx*Hy) / leps;
-      E[1][0] = (Hy*w + kx*E[1][2]) / (sgn*qi.real());
-      E[1][1] = (ky*E[1][2]) / (sgn*qi.real());
+                {
+                const double qsign(0 == j ? 1 : -1);
+                const std::complex<double> Hx = ab[i  +j*n2];
+                const std::complex<double> Hy = ab[i+n+j*n2];
+                const std::complex<double> H[2][3] = {
+                    { Hx, 0, -(kx*Hx)/(qsign*qi.real()) },
+                    { 0, Hy, -(ky*Hy)/(qsign*qi.real()) }
+                    };
+                // The E field is Cross[H,{kx,ky,(qsign*qi.real())}] / leps
+                std::complex<double> E[2][3];
+                const double sgn(qsign);
+                const S4_Material *M = NULL;
+                if(layer->material >= 0)
+                    {
+                    M = &S->material[layer->material];
+                    }
+                else
+                    {
+                    M = &S->material[S->layer[layer->copy].material];
+                    }
+                const double leps = (NULL != M ? M->eps.s[0] : 1);
+                E[0][2] = ky*Hx / leps;
+                E[0][0] =  kx*E[0][2]       / (sgn*qi.real());
+                E[0][1] = (ky*E[0][2] - Hx*w) / (sgn*qi.real());
+                E[1][2] = (-kx*Hy) / leps;
+                E[1][0] = (Hy*w + kx*E[1][2]) / (sgn*qi.real());
+                E[1][1] = (ky*E[1][2]) / (sgn*qi.real());
 /*if(qi.imag() == 0){
   std::cout << "   leps = " << leps << std::endl;
   std::cout << "   E[0] = " << E[0][0] << ", " << E[0][1] << ", " << E[0][2] << std::endl;
   std::cout << "   E[1] = " << E[1][0] << ", " << E[1][1] << ", " << E[1][2] << std::endl;
 }*/
-      double ru[3] = { 1, 0, -kx/(qsign*Lmodes->q[i].real()) };
-      geom_normalize3d(ru);
-      double v[3];
-      geom_cross3d(rd, ru, v);
-      std::complex<double> c0(ru[0]*(E[0][0]+E[1][0]) + ru[1]*(E[0][1]+E[1][1]) + ru[2]*(E[0][2]+E[1][2]));
-      std::complex<double> c1( v[0]*(E[0][0]+E[1][0]) +  v[1]*(E[0][1]+E[1][1]) +  v[2]*(E[0][2]+E[1][2]));
-      // Re-polarize so u is the s-polarization vector
-      {
-        // Don't touch d, only perform a rotation of u around d.
-        double p[3] = {1,0,0};
-        const double dxy2 = rd[0]*rd[0]+rd[1]*rd[1];
-        const double tol = 1e-15;
-        if(dxy2 > tol*tol){
-          if(fabs(rd[2]) > tol){
-            p[0] = rd[0];
-            p[1] = rd[1];
-            p[2] = -dxy2/rd[2];
-          }else{
-            p[0] = 0;
-            p[1] = 0;
-            p[2] = 1;
-          }
+                double ru[3] = { 1, 0, -kx/(qsign*Lmodes->q[i].real()) };
+                geom_normalize3d(ru);
+                double v[3];
+                geom_cross3d(rd, ru, v);
+                std::complex<double> c0(ru[0]*(E[0][0]+E[1][0]) + ru[1]*(E[0][1]+E[1][1]) + ru[2]*(E[0][2]+E[1][2]));
+                std::complex<double> c1( v[0]*(E[0][0]+E[1][0]) +  v[1]*(E[0][1]+E[1][1]) +  v[2]*(E[0][2]+E[1][2]));
+                // Re-polarize so u is the s-polarization vector
+                    {
+                    // Don't touch d, only perform a rotation of u around d.
+                    double p[3] = {1,0,0};
+                    const double dxy2 = rd[0]*rd[0]+rd[1]*rd[1];
+                    const double tol = 1e-15;
+                    if(dxy2 > tol*tol)
+                        {
+                        if(fabs(rd[2]) > tol)
+                            {
+                            p[0] = rd[0];
+                            p[1] = rd[1];
+                            p[2] = -dxy2/rd[2];
+                            }
+                        else
+                            {
+                            p[0] = 0;
+                            p[1] = 0;
+                            p[2] = 1;
+                            }
+                        }
+                    // Orthogonalize p to be sure
+                    double pdd(geom_dot3d(p, rd));
+                    p[0] -= pdd*rd[0];
+                    p[1] -= pdd*rd[1];
+                    p[2] -= pdd*rd[2];
+                    geom_normalize3d(p);
+                    // Now perform rotations
+                    const double cs = geom_dot3d(p, ru);
+                    const double sn = geom_dot3d(p, v);
+                    const std::complex<double> c0p = cs*c0 + sn*c1;
+                    c1 = cs*c1 - sn*c0;
+                    c0 = c0p;
+
+                    curwave[ 4] = p[0];
+                    curwave[ 5] = p[1];
+                    curwave[ 6] = p[2];
+                    curwave[ 7] = c0.real();
+                    curwave[ 8] = c0.imag();
+                    curwave[ 9] = c1.real();
+                    curwave[10] = c1.imag();
+                    }
+                }
+            }
         }
-        // Orthogonalize p to be sure
-        double pdd(geom_dot3d(p, rd));
-        p[0] -= pdd*rd[0];
-        p[1] -= pdd*rd[1];
-        p[2] -= pdd*rd[2];
-        geom_normalize3d(p);
-        // Now perform rotations
-        const double cs = geom_dot3d(p, ru);
-        const double sn = geom_dot3d(p, v);
-        const std::complex<double> c0p = cs*c0 + sn*c1;
-        c1 = cs*c1 - sn*c0;
-        c0 = c0p;
 
-        curwave[ 4] = p[0];
-        curwave[ 5] = p[1];
-        curwave[ 6] = p[2];
-        curwave[ 7] = c0.real();
-        curwave[ 8] = c0.imag();
-        curwave[ 9] = c1.real();
-        curwave[10] = c1.imag();
-      }
-}
+    S4_TRACE("< Simulation_GetWaves [omega=%f]\n", S->omega[0]);
+    return 0;
     }
-  }
-
-  S4_TRACE("< Simulation_GetWaves [omega=%f]\n", S->omega[0]);
-  return 0;
-}
 
 void Simulation_DestroySolution(S4_Simulation *S){
   S4_TRACE("> Simulation_DestroySolution(S=%p) [omega=%f]\n", S, S->omega[0]);

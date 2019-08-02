@@ -855,6 +855,42 @@ py::array_t<double> PySimulation::GetPoyntingFlux(std::string pyLayer, double py
 
     }
 
+py::array_t<double> PySimulation::GetPoyntingFluxByG(std::string pyLayer, double pyZOffset)
+    {
+    // make sure python sends in pyZOffset as 0 by default
+    const char *layer_name = pyLayer.c_str();
+    S4_LayerID layer_id;
+    S4_real offset = pyZOffset;
+
+    // get the layer by name
+    layer_id = S4_Simulation_GetLayerByName(S, layer_name);
+    if (layer_id < 0)
+        {
+        std::ostringstream s;
+        s << "S4_Layer named " << pyLayer.c_str() << " not found";
+        throw std::runtime_error(s.str());
+        }
+    S4_Layer *layer = &S->layer[layer_id];
+    // get the number of bases
+    int n = S4_Simulation_GetBases(S, NULL);
+    double *powers;
+    powers = (double*)malloc(sizeof(double)*4*n);
+    int ret = Simulation_GetPoyntingFluxByG(S, layer, offset, powers);
+
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "GetPowerFluxByG returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    // format the return value
+    auto pyPower = py::array_t<double>(4*n);
+    auto pyBuffer = pyPower.request();
+    std::memcpy(pyBuffer.ptr, powers, 4*sizeof(double)*n);
+    return pyPower;
+
+    }
+
 py::array_t<double> PySimulation::GetFieldAtPoint(py::array_t<double> pyPoint)
     {
     // This will return the double in the exact same form as the
@@ -970,6 +1006,41 @@ std::tuple<py::array_t<std::complex<double>>, py::array_t<std::complex<double>>>
     // return pyField;
     }
 
+py::array_t<double> PySimulation::GetWaves(std::string pyLayer)
+    {
+    const char *layer_name = pyLayer.c_str();
+    S4_LayerID layer;
+
+    // get the layer by name
+    layer = S4_Simulation_GetLayerByName(S, layer_name);
+    if (layer < 0)
+        {
+        std::ostringstream s;
+        s << "S4_Layer named " << pyLayer.c_str() << " not found";
+        throw std::runtime_error(s.str());
+        }
+    int n, ret;
+    S4_real* waves = NULL;
+    // get the number of bases
+    n = S4_Simulation_GetBases(S, NULL);
+    const int n2 = 2*n;
+    // create array to hold waves object
+    waves = (S4_real*)malloc(sizeof(S4_real)*11*n2);
+    ret = S4_Simulation_GetWaves(S, layer, waves);
+    if (ret != 0)
+        {
+        std::ostringstream s;
+        s << "GetWaves returned code " << ret;
+        throw std::runtime_error(s.str());
+        }
+    // format the return value
+    auto pyWaves = py::array_t<double>(11*n2);
+    auto pyBuffer = pyWaves.request();
+    std::memcpy(pyBuffer.ptr, waves, 11*n2*sizeof(double));
+    return pyWaves;
+
+    }
+
 PYBIND11_MODULE(_S4, m)
     {
     m.doc() = "C++ wrapper for S4 RCWA Code. Care should be taken directly interacting with \
@@ -1001,8 +1072,10 @@ this module. End-users should use the python wrapper instead.";
         .def("_SetResolution", &PySimulation::SetResolution)
         .def("_TestArray", &PySimulation::TestArray)
         .def("_GetPoyntingFlux", &PySimulation::GetPoyntingFlux)
+        .def("_GetPoyntingFluxByG", &PySimulation::GetPoyntingFluxByG)
         .def("_GetFieldAtPoint", &PySimulation::GetFieldAtPoint)
         .def("_GetFieldPlane", &PySimulation::GetFieldPlane)
+        .def("_GetWaves", &PySimulation::GetWaves)
         // .def("Clone", &S4_Simulation_Clone)
         // .def("New", &S4_Simulation_New)
         ;

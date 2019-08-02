@@ -1,5 +1,5 @@
 # from ._S4 import S4_Simulation
-__version__ = "1.1.3"
+__version__ = "1.1.4"
 from ._S4 import S4_Simulation as _S4Sim
 import numpy as np
 # from . import S4
@@ -835,6 +835,42 @@ class Simulation:
         powerFlux = self._S4Sim._GetPoyntingFlux(l_layer, l_offset)
         return powerFlux
 
+    def get_poynting_flux_by_G(self, layer, offset=0.0):
+        """
+        Get the Poynting Flux by each wave vector
+
+        :param layer: name of layer
+        :param offset: offset from the beginning of the layer
+        :type layer: str
+        :type offset: float
+
+        :return: power flux [[forward_real, backward_real,
+                 forward_imaginary, backward_imaginary]]
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(n, 4, \\right)`,
+               dtype=float
+
+        .. todo::
+
+           fix issue with (print(S.GetPoyntingFlux(<layer>))) that
+           results in a malloc error; may be alright. Be on the lookout.
+        """
+        self._check_for_sim()
+
+        if not isinstance(layer, str):
+            raise RuntimeError("Layer must be a string")
+        l_layer = layer
+
+        l_offset = offset
+        if not isinstance(offset, float):
+            print("offset should be a float; attempting to cast")
+            l_offset = float(offset)
+            print("using a value of offset = {}".format(l_offset))
+
+        # get the data
+        powerFluxRaw = self._S4Sim._GetPoyntingFluxByG(l_layer, l_offset)
+        powerFlux = np.copy(powerFluxRaw.reshape((-1, 4)))
+        return powerFlux
+
     def get_field_at_point(self, point):
         """
         Get the electric and magnetic field at a particular point in the
@@ -920,6 +956,42 @@ class Simulation:
         hfield = hfield.reshape(l_n_uv[1], l_n_uv[0], 3)
         # return the arrays
         return efield, hfield
+
+    def get_waves(self, layer):
+        """
+        Get the Waves
+
+        :param layer: name of layer
+        :type layer: str
+
+        :return: waves [forward_real, backward_real,
+                 forward_imaginary, backward_imaginary]
+        :type: :class:`numpy.ndarray`, shape= :math:`\\left(4, \\right)`,
+               dtype=float
+
+        .. todo::
+
+           fix issue with (print(S.GetPoyntingFlux(<layer>))) that
+           results in a malloc error; may be alright. Be on the lookout.
+
+           Update documentation:
+           a wave object is:
+           direction = {kx,ky,kzr,kzi}
+           polarization = {x,y,z}
+           cu = {re,im}
+           cv = {re,im}
+        """
+        self._check_for_sim()
+
+        if not isinstance(layer, str):
+            raise RuntimeError("Layer must be a string")
+        l_layer = layer
+
+        # get the data
+        rawWaves = self._S4Sim._GetWaves(l_layer)
+        # reformat the waves
+        waves = np.copy(rawWaves.reshape((-1, 2, 11)))
+        return waves
 
     def _test(self):
 

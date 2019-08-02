@@ -69,8 +69,11 @@ class PySimulation
     /* py::array_t<std::complex<double>> TestArray(); */
     py::array_t<double> TestArray();
     py::array_t<double> GetPoyntingFlux(std::string pyLayer, double pyZOffset);
+    py::array_t<double> GetPoyntingFluxByG(std::string pyLayer, double pyZOffset);
     py::array_t<double> GetFieldAtPoint(py::array_t<double> pyPoint);
     std::tuple<py::array_t<std::complex<double>>, py::array_t<std::complex<double>>> GetFieldPlane(double pyZ, py::array_t<int> pyNUV);
+    py::array_t<double> GetWaves(std::string pyLayer);
+
 
     private:
     S4_Simulation* S;
