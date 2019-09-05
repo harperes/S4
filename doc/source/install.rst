@@ -390,7 +390,7 @@ Compile and Install OpenBLAS
 
    .. code:: bash
 
-      $: cd $codeDir
+      $: cd $gitParentDir
       $: git clone https://github.com/xianyi/OpenBLAS
 
 #. Ensure optimal performance, otherwise OpenBLAS will use MPI to parallelize and the parallelism gained will be suboptimal.
@@ -492,7 +492,7 @@ Now to install S4. Instructions are very similar to the above.
 
    .. code:: bash
 
-      $: cd $codeDir
+      $: cd $gitParentDir
       $: git clone https://github.com/harperes/S4.git
 
 #. Compile S4
