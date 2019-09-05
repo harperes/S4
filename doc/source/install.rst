@@ -6,7 +6,7 @@ software on Thanos and Ultron. Please follow these instructions to
 install and use S4.**
 
 This guide covers the installation of the S4 software. This guide
-currently (<2019-05-15 Wed>) only covers installation on Ubuntu Linux;
+currently (<2019-08-05 Thu>) only covers installation on Ubuntu Linux;
 this software *should* be able to be installed on any Unix/Linux
 machine, but the exact packages and steps will be OS dependent.
 
@@ -256,23 +256,28 @@ Compile and Install pybind11
 Now we need to install pybind11 to properly expose underlying C++ code
 to python.
 
+#. Define path variables
+
+   .. code:: bash
+
+      # Recommended paths
+      $: gitParentDir=~/Code
+      $: codeDir=~/Code/pybind11
+      $: buildDir=~/Build/pybind11
+      $: installPath=/opt/pybind11
+
 #. Clone repository
 
    .. code:: bash
 
-      # suggested location for pybind11 repository: ~/code
-      # ie /pth/to/code = ~/code
-      $: PATH_CODE=~/code
-      $: cd ${PATH_CODE}
+      $: cd $gitParentDir
       $: git clone https://github.com/pybind/pybind11
 
 #. Install python module
 
    .. code:: bash
 
-      # suggested location for pybind11 repository: ~/code/pybind11
-      $: PB11_CODE=~/code/pybind11
-      $: cd ${PB11_CODE}
+      $: cd $codeDir
       $: pip install . --user
 
    If you are installing using the ``--user`` flag, this should install
@@ -288,6 +293,12 @@ to python.
    **NOTE:** you may also install this to your miniconda environment by
    skipping the ``--user`` flag. This module will then only be active
    when the miniconda environment is active.
+
+#. Activate your conda environment
+
+   .. code:: bash
+
+      $: conda activate ENV
 
 #. C++ module and cmake files
 
@@ -306,11 +317,10 @@ to python.
    library. The executable path may be found by running the following
    commands
 
+   Determine the path to your python executable
+
    .. code:: bash
 
-      # make sure that you are in an active conda environment
-      $: conda activate ENV
-      # now, determine the path to your python executable
       (ENV) $: which python
       /home/UNAME/miniconda3/envs/s4py/bin/python
 
@@ -326,35 +336,24 @@ to python.
 
    .. code:: bash
 
-      # it is suggested to build out of a build directory
-      # ie ~/build
-      $: PATH_BUILD=~/build
-      $: cd ${PATH_BUILD}
-      $: mkdir pybind11
-      $: cd pybind11
-      # you should now be in ~/build/pybind11
-      # you may check by running:
-      $: pwd
-      # run cmake, installing to the install location
-      # suggested install prefix: /opt/pybind11
-      # ie /pth/to/pybind11_install = /opt/pybind11
-      $: PB11_CODE=~/code/pybind11
-      $: PB11_INSTALL=/opt/pybind11
-      # Use if running from the system or base miniconda python
-      $: ccmake ${PB11_CODE} -DCMAKE_INSTALL_PREFIX=${PB11_INSTALL}
-      # Use if running from a miniconda environment python
-      $: ccmake ${PB11_CODE} -DCMAKE_INSTALL_PREFIX=${PB11_INSTALL} \
-                             -DPYTHON_EXECUTABLE=/pth/to/conda/env/bin/python \
-                             -DPYTHON_LIBRARY=/pth/to/conda/env/lib/python3.6m.so
+      $: mkdir -p $buildDir
+      $: cd $buildDir
+
+      # If running from a miniconda environment python (RECOMMENDED)
+      $: ccmake $codeDir -DCMAKE_INSTALL_PREFIX=$installPath \
+                         -DPYTHON_EXECUTABLE=/pth/to/conda/env/bin/python \
+                         -DPYTHON_LIBRARY=/pth/to/conda/env/lib/python3.6m.so
+
+      # If running from the system or base miniconda python:
+      $: ccmake $codeDir -DCMAKE_INSTALL_PREFIX=$installPath
+
       # If this is the first time you run ccmake, you should see a screen
       # displaying "EMPTY CACHE"
-      # now configure
       # press "c" once to run the initial configuration
       # press "c" again to run again
-      # now you should see an option for "g" to generate
-      # the required files for compilation
-      # now compile. Use as many cores as you can/have access to
-      # the -jN flag will use N threads to compile
+      # Now you should see an option "g" to generate the required files
+
+      # Compile. The -jN flag (optional) will use N threads to compile
       $: make install -j10
 
 #. Add install to PATH (**only set if not installing to
@@ -377,48 +376,64 @@ Compile and Install OpenBLAS
    for \`multi-threaded' to find the correct flags to include in
    ``make`` <https://github.com/xianyi/OpenBLAS/wiki/faq>`__
 
+#. Define path variables
+
+   .. code:: bash
+
+      # Recommended paths
+      $: gitParentDir=~/Code
+      $: codeDir=~/Code/OpenBLAS
+      $: buildDir=~/Build/OpenBLAS
+      $: installPath=/opt/OpenBLAS
+
 #. Clone Repository
 
    .. code:: bash
 
-      # suggestion: ~/code
-      $: PATH_CODE=~/code
-      $: cd ${PATH_CODE}
+      $: cd $codeDir
       $: git clone https://github.com/xianyi/OpenBLAS
 
-#. Make and Install
+#. Ensure optimal performance, otherwise OpenBLAS will use MPI to parallelize and the parallelism gained will be suboptimal.
 
    .. code:: bash
 
-      # suggestion: ~/code/OpenBLAS
-      # ie /pth/to/OpenBLAS = ~/code/OpenBLAS
-      $: OB_CODE=~/code/OpenBLAS
-      $: cd ${OB_CODE}
-      # this is required to ensure optimal performance
-      # (otherwise OpenBLAS will use MPI to parallelize
-      # and the parallelism gained will be sub-optimal)
       $: export OPENBLAS_NUM_THREADS=1
-      # suggested install location: /opt/OpenBLAS
-      # ie /pth/to/OpenBLAS_install = /opt/OpenBLAS
-      $: OB_INSTALL=/opt/OpenBLAS
-      $: make USE_THREAD=0 PREFIX=${OB_INSTALL}
-      # suggested: /pth/to/build = ~/build
-      $: PATH_BUILD=~/build
-      $: cd ${PATH_BUILD}
-      $: mkdir OpenBLAS
-      $: ccmake ${OB_CODE} -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=${OB_INSTALL}
-      $: make install -j10
-      $: cd ${OB_CODE}
-      $: make USE_THREAD=0 PREFIX=${OB_INSTALL}
-      $: sudo make USE_THREAD=0 PREFIX=${OB_INSTALL} install
+
+#. There can issues compiling OpenBLAS within an active conda
+   environment. You should deactive any active conda 
+   environment before compiling OpenBLAS.
+
+   .. code:: bash
+
+      $: conda deactivate
+
+#. Make and Install (NOTE: Slight differences for AMD versus Intel chipsets.)
+
+   .. code:: bash
+
+      $: cd $codeDir
+      $: make USE_THREAD=0 PREFIX=$installDir
+      $: mkdir -p $buildDir
+      $: cd $buildDir
+
+      # AMD chipsets only:
+      $: ccmake $codeDir -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=$installDir
+
+      # Intel chipsets only:
+      $: ccmake $codeDir -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=$installDir -DTARGET=SKYLAKEX
+      # Within the ccmake configurer, hit t to switch to advanced mode 
+      # Tell the compiler to expect the skylake architecture
+      CMAKE_C_FLAGS   -march=skylake-avx512
+
+      # All
+      $: [sudo] make install -j10
+      $: cd $codeDir
+      $: make USE_THREAD=0 PREFIX=$installPath
+      $: [sudo] make USE_THREAD=0 PREFIX=$installPath install
 
    **Note: for some reason I've only been able to successfully get cmake
    to find both openblas and lapack correctly if installed in this
    strange make-cmake-make order**
-
-   **NOTE:** There may be an issue compiling OpenBLAS while a conda
-   environment is active. It is recommended to not be in an active conda
-   environment when compiling OpenBLAS.
 
 #. Add install to PATH (**NOTE:** THIS SHOULD NOT BE NEEDED)
 
@@ -453,36 +468,42 @@ Now to install S4. Instructions are very similar to the above.
    the same that you will be using when running (as of <2018-12-18 Tue>
    3.6 is recommended and specified in the s4py.yml)
 
-   You can either use anaconda python, or the system (Ubuntu) python. It
-   is easier to just activate the s4py environment and build from there
-   ``$: conda activate s4py``, but you can follow the instructions below
-   to use the *Ubuntu (system) python*
+#. We recommend installing S4 within the s4py conda environment to avoid
+   version conflicts, though you may use the system python if desired:
+
+   .. code:: bash
+   $: conda activate s4py
+
+#. Define path variables
+
+   **Note**: You do not have to install to ``/opt/``. On your own
+   machine you can install wherever you would like. If you omit
+   ``-DCMAKE_INSTALL_PREFIX``, S4 will install to ``~/.local``
+
+   .. code:: bash
+
+      # Recommended paths
+      $: gitParentDir=~/Code
+      $: codeDir=~/Code/S4
+      $: buildDir=~/Build/S4
+      $: installPath=/opt
 
 #. Clone S4
 
    .. code:: bash
 
-      # suggestion: ~/code
-      $: PATH_CODE=~/code
-      $: cd ${PATH_CODE}
+      $: cd $codeDir
       $: git clone https://github.com/harperes/S4.git
 
 #. Compile S4
 
-   **Note**: You do not have to install to ``/opt/``. On your own
-   machine you can install wherever you would like. If you omit
-   ``-DCMAKE_INSTALL_PREFIX``, S4 should install to ``~/.local``
-
    .. code:: bash
 
-      # suggestion: ~/build
-      $: S4_CODE=~/code/S4
-      $: PATH_BUILD=~/build
-      $: cd ${PATH_BUILD}
-      $: ccmake ${S4_CODE} -DCMAKE_INSTALL_PREFIX=/opt
-      $: (sudo) make install -j6
+      $: cd $buildDir
+      $: ccmake $codeDir -DCMAKE_INSTALL_PREFIX=$installPath
+      $: [sudo] make install -j6
 
-   **Note: on Ultron and Thanos S4 is properly compiled for all users by
+   **Note: on the cluster, S4 is properly compiled for all users by
    the admins. make sure that the paths are correct**
 
    You **shouldn't** need to add in other arguments; the cmake scripts
@@ -515,10 +536,14 @@ Now to install S4. Instructions are very similar to the above.
    .. code:: bash
 
       $: conda activate ENV_NAME
-      # Navigate to S4 test dictory
-      $: cd /pth/to/S4/tests
+      $: cd $codeDir/tests
       # run unit tests
       $: python -m unittest
+
+#. If the unittest failed, you may have build in the wrong directory
+   or you may need to re-run ldconfig
+   .. code:: bash
+   $: sudo ldconfig
 
 Appendix: System vs ``conda`` python
 ====================================
