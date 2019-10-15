@@ -553,7 +553,12 @@ class Simulation:
         :param angle: :math:`\\left(\\phi, \\theta\\right)` Angles (in degrees
                       by default. set `use_radians` to `True` to use radians).
                       :math:`\\phi, \\theta` give spherical coordinate angles
-                      of the planewave k-vector. Fill in more later.
+                      of the planewave k-vector. :math:`\\phi` specifies the
+                      first angle by which :math:`\\left(E,H,k\\right)` should
+                      be rotated (CW) about the y-axis. :math:`\\theta`
+                      specifies the angle by which :math:`\\left(E,H,k\\right)`
+                      should be rotated (CCW) about the z-axis. Note the
+                      different directions of rotations for each angle.
         :param pol_s: amplitude, phase (in degrees, set `use_radians` to
                       `True` to use radians) of the s-polarization
         :param pol_p: amplitude, phase (in degrees, set `use_radians` to
