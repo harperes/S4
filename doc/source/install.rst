@@ -400,7 +400,7 @@ Compile and Install OpenBLAS
       $: export OPENBLAS_NUM_THREADS=1
 
 #. There can issues compiling OpenBLAS within an active conda
-   environment. You should deactive any active conda 
+   environment. You should deactive any active conda
    environment before compiling OpenBLAS.
 
    .. code:: bash
@@ -421,7 +421,7 @@ Compile and Install OpenBLAS
 
       # Intel chipsets only:
       $: ccmake $codeDir -DUSE_THREAD=0 -DCMAKE_INSTALL_PREFIX=$installDir -DTARGET=SKYLAKEX
-      # Within the ccmake configurer, hit t to switch to advanced mode 
+      # Within the ccmake configurer, hit t to switch to advanced mode
       # Tell the compiler to expect the skylake architecture
       CMAKE_C_FLAGS   -march=skylake-avx512
 
@@ -542,8 +542,10 @@ Now to install S4. Instructions are very similar to the above.
 
 #. If the unittest failed, you may have build in the wrong directory
    or you may need to re-run ldconfig
+
    .. code:: bash
-   $: sudo ldconfig
+
+      $: sudo ldconfig
 
 Appendix: System vs ``conda`` python
 ====================================

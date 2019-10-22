@@ -793,7 +793,7 @@ class Simulation:
         Set the resolution of the system. Lots of notes here.
 
         :param resolution: integer multiple to multiply the largest G-vector by
-        (must be 2 to satisfy the Nyquist limit)
+                           (must be 2 to satisfy the Nyquist limit)
         :type resolution: int
         """
         self._check_for_sim()
@@ -881,7 +881,7 @@ class Simulation:
         Get the electric and magnetic field at a particular point in the
         structure
 
-        :param point: :math: `\\left(x, y, z, \\right)` point in the structure
+        :param point: :math:`\\left(x, y, z, \\right)` point in the structure
                       at which to retrieve the value of the electric field
         :type point: :class:`numpy.ndarray`, shape= :math:`\\left(3, \\right)`,
                      dtype=float
