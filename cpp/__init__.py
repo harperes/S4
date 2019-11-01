@@ -1,7 +1,8 @@
 # from ._S4 import S4_Simulation
-__version__ = "1.1.4"
+__version__ = "1.1.5"
 from ._S4 import S4_Simulation as _S4Sim
 import numpy as np
+import warnings
 # from . import S4
 
 
@@ -25,6 +26,52 @@ class Simulation:
         """
         if not self._hasSim:
             raise RuntimeError("No simulation found. Aborting.")
+
+    def _count_nans(self, arr):
+        """
+        Check for the number of nan values in a numpy array
+
+
+        :param arr: array to check number of nan values in
+        :type arr: :class:`numpy.ndarray`, dtype=float
+        :return: number of nans in array
+        :type: int
+        """
+        l_arr = np.asarray(arr)
+        l_arr = np.require(l_arr, requirements=["C"])
+        return int(np.count_nonzero(np.is_nan(arr)))
+
+    def _set_nan_to_zero(self, arr):
+        """
+        Set all nan values to 0
+
+
+        :param arr: array to check number of nan values in
+        :type arr: :class:`numpy.ndarray`, dtype=float
+        """
+        arr[np.isnan(arr)] = 0.0
+
+    def _sanitize_array(self, arr, dtype=np.float64, warn_name=None):
+        """
+        sanitize a given array for input into S4 cpp function
+
+        :param arr: array to sanitize
+        :type arr: :class:`numpy.ndarray`
+        :param dtype: type to set array to
+        :type dtype: :class:`numpy.dtype`
+        :return: sanitized array
+        :type: :class:`numpy.ndarray`
+        """
+        arr = np.require(arr, dtype=dtype, requirements=["C"])
+        # there is now a chance that nan values are in the array and will
+        # result in uncaught improper calculations
+        # count the number of nans
+        n_nan = self._count_nans(arr)
+        if n_nan != 0:
+            warnings.warn(f"np.nan found in {warn_name}. These values will be \
+                set to 0. Please check angles to ensure all values supplied.")
+            self._set_nan_to_zero(arr)
+        return arr
 
     def create_new(self):
         """
@@ -59,7 +106,7 @@ class Simulation:
                     (l_eps.shape[1] == 3) and
                     (l_eps.shape[2] == 2)):
                 raise RuntimeError("eps must be a 3x3x2 array")
-        l_eps = np.require(l_eps, dtype=np.float64, requirements=["C"])
+        l_eps = self._sanitize_array(l_eps, dtype=np.float64, warn_name="eps")
         return l_eps
 
     def add_material(self, name, eps):
@@ -132,7 +179,9 @@ class Simulation:
         else:
             if not ((l_bv.shape[0] == 2) and (l_bv.shape[1] == 2)):
                 raise RuntimeError("l_bv must be a 2x2 array")
-        l_bv = np.require(l_bv, dtype=np.float64, requirements=["C"])
+        l_bv = self._sanitize_array(l_bv,
+                                    dtype=np.float64,
+                                    warn_name="basis_vectors")
 
         # pass into the function
         self._S4Sim._SetLattice(l_bv)
@@ -305,7 +354,9 @@ class Simulation:
             raise RuntimeError("Center must be a vector (1D array)")
         if not l_center.shape[0] == 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
-        l_center = np.require(l_center, dtype=np.float64, requirements=["C"])
+        l_center = self._sanitize_array(l_center,
+                                        dtype=np.float64,
+                                        warn_name="center")
         l_radius = radius
         if not isinstance(radius, float):
             print("input radius is not a float. Casting to float")
@@ -365,11 +416,17 @@ class Simulation:
             raise RuntimeError("Center must be a vector (1D array)")
         if not l_center.shape[0] == 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
+        l_center = self._sanitize_array(l_center,
+                                        dtype=np.float64,
+                                        warn_name="center")
         l_halfwidths = np.asarray(halfwidths)
         if not l_halfwidths.ndim == 1:
             raise RuntimeError("halfwidths must be a 1D array")
         if not l_halfwidths.shape[0] == 2:
             raise RuntimeError("halfwidths must be an array of [x, y]")
+        l_halfwidths = self._sanitize_array(l_halfwidths,
+                                            dtype=np.float64,
+                                            warn_name="halfwidths")
 
         # there is something strange going on with the ability to rotate the
         # polygon
@@ -438,11 +495,17 @@ class Simulation:
             raise RuntimeError("Center must be a vector (1D array)")
         if not l_center.shape[0] == 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
+        l_center = self._sanitize_array(l_center,
+                                        dtype=np.float64,
+                                        warn_name="center")
         l_halfwidths = np.asarray(halfwidths)
         if not l_halfwidths.ndim == 1:
             raise RuntimeError("halfwidths must be a 1D array")
         if not l_halfwidths.shape[0] == 2:
             raise RuntimeError("halfwidths must be an array of [x, y]")
+        l_halfwidths = self._sanitize_array(l_halfwidths,
+                                            dtype=np.float64,
+                                            warn_name="halfwidths")
 
         # there is something strange going on with the ability to rotate the
         # polygon
@@ -510,11 +573,17 @@ class Simulation:
             raise RuntimeError("Center must be a vector (1D array)")
         if l_center.shape[0] != 2:
             raise RuntimeError("Center must be a 2 element vector (x, y)")
+        l_center = self._sanitize_array(l_center,
+                                        dtype=np.float64,
+                                        warn_name="center")
         l_vertices = np.asarray(vertices)
         if l_vertices.ndim != 2:
             raise RuntimeError("vertices must be a list of vectors (2D array)")
         if l_vertices.shape[1] != 2:
             raise RuntimeError("each vertex must be a 2 element vector (x, y)")
+        l_vertices = self._sanitize_array(l_vertices,
+                                          dtype=np.float64,
+                                          warn_name="vertices")
         # check for CCW
         cverts = np.append(l_vertices, [l_vertices[0]], axis=0)
         cross = np.sum(np.multiply(cverts[:-1, 0], cverts[1:, 1])
@@ -588,7 +657,9 @@ class Simulation:
             raise RuntimeError("Angle must be a vector (1D array)")
         if not l_angle.shape[0] == 2:
             raise RuntimeError("Angle must be a 2 element vector (phi, theta)")
-        l_angle = np.require(l_angle, dtype=np.float64, requirements=["C"])
+        l_angle = self._sanitize_array(l_angle,
+                                       dtype=np.float64,
+                                       warn_name="angle")
 
         l_pol_s = np.asarray(pol_s)
         if not l_pol_s.ndim == 1:
@@ -596,7 +667,9 @@ class Simulation:
         if not l_pol_s.shape[0] == 2:
             err_str = "pol_s must be a 2 element vector (amplitude, phase)"
             raise RuntimeError(err_str)
-        l_pol_s = np.require(l_pol_s, dtype=np.float64, requirements=["C"])
+        l_pol_s = self._sanitize_array(l_pol_s,
+                                       dtype=np.float64,
+                                       warn_name="pol_s")
 
         l_pol_p = np.asarray(pol_p)
         if not l_pol_p.ndim == 1:
@@ -604,7 +677,9 @@ class Simulation:
         if not l_pol_p.shape[0] == 2:
             err_str = "pol_p must be a 2 element vector (amplitude, phase)"
             raise RuntimeError(err_str)
-        l_pol_p = np.require(l_pol_p, dtype=np.float64, requirements=["C"])
+        l_pol_p = self._sanitize_array(l_pol_p,
+                                       dtype=np.float64,
+                                       warn_name="pol_p")
 
         l_order = order
         if not isinstance(order, int):
