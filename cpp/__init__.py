@@ -242,7 +242,7 @@ class Simulation:
         if not isinstance(thickness, float):
             warn_str = ("Warning: thickness not a float; "
                         "attempting to cast to float")
-            print(warn_str)
+            warnings.warn(warn_str)
             l_thickness = float(thickness)
             print("Using thickness = {}".format(l_thickness))
         else:
@@ -278,7 +278,7 @@ class Simulation:
         if not isinstance(thickness, float):
             warn_str = ("Warning: thickness not a float; "
                         "attempting to cast to float")
-            print(warn_str)
+            warnings.warn(warn_str)
             l_thickness = float(thickness)
             print("Using thickness = {}".format(l_thickness))
         else:
@@ -311,7 +311,7 @@ class Simulation:
         if not isinstance(thickness, float):
             warn_str = ("Warning: thickness not a float; "
                         "attempting to cast to float")
-            print(warn_str)
+            warnings.warn(warn_str)
             l_thickness = float(thickness)
             print("Using thickness = {}".format(l_thickness))
         else:
