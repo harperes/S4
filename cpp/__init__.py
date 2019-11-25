@@ -39,7 +39,7 @@ class Simulation:
         """
         l_arr = np.asarray(arr)
         l_arr = np.require(l_arr, requirements=["C"])
-        return int(np.count_nonzero(np.is_nan(arr)))
+        return int(np.count_nonzero(np.isnan(arr)))
 
     def _set_nan_to_zero(self, arr):
         """
