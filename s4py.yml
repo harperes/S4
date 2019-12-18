@@ -3,22 +3,21 @@ channels:
   - conda-forge
   - defaults
 dependencies:
-  - blas=1.1=openblas
-  - cloudpickle=0.6.1=py36_0
+  - blas=2.14=openblas
+  - cloudpickle
   - h5py
   - hdf5
   - ipython
   - jupyter
-  - matplotlib=3.0.1
+  - matplotlib
   - mpi4py
   - numpy
   - pandas
   - pip
   - pytables
   - pytest
-  - python=3.6.7
+  - python=3.7
   - scipy
   - pip:
-    - signac==0.9.5
-    - tables==3.4.4
-prefix: /home/harperes/.conda/envs/s4py
+    - signac
+    - tables
