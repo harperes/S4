@@ -1,0 +1,23 @@
+* SiO2
+
+This data comes from two sources (both from [[https://refractiveindex.info][RefractiveIndex.org]])
+** Lemarchand 2013, Thin Film, n, k 0.25 - 2.5 um
+   [[https://refractiveindex.info/?shelf=main&book=SiO2&page=Lemarchand][Link to dataset]]
+   This is experimental data and is a csv
+** Kischkat 2012, Thin Film, n, k 1.54 - 14.3 um
+   [[https://refractiveindex.info/?shelf=main&book=SiO2&page=Kischkat][Link to dataset]]
+   this is an experimental dataset and is a csv
+** I combined these by taking all of the Lemarchand data, and then appending the Kischkat data to the end (>2.5)
+   - The kischkat dataset is two columns, n followed by k. This requires reformatting. This shall be done programatically.
+
+* Si
+
+This data comes from two sources (both from [[https://refractiveindex.info][RefractiveIndex.org]])
+** Schinke 2015, Crystalline, n, k 0.25 - 1.45 um
+   [[https://refractiveindex.info/?shelf=main&book=Si&page=Schinke][Link to dataset]]
+   This is experimental data and is a csv
+** Li , Thin Film, n, k 1.2 - 14 um
+   [[https://refractiveindex.info/?shelf=main&book=Si&page=Li-293K][Link to dataset]]
+   this is an experimental dataset and is a csv
+** I combined these by taking all of the Schinke data, and then appending the Li data to the end (>1.45)
+   - The kischkat dataset is two columns, n followed by k. This requires reformatting. This shall be done programatically.

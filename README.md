@@ -176,6 +176,8 @@ $: conda config --add channels conda-forge
     $: conda env create -f s4py.yml
     ```
 
+    You may also use the `MANTIS.yml` file included in the [MANTIS repo](https://gitlab.rdte.afrl.dren.mil/lmisom/MANTIS) (you can think of the `MANTIS.yml` conda environment as a superset of the `s4py.yml` environment in that it contains everything you need to run S4 and more!)
+
 Environment Setup
 -----------------
 
